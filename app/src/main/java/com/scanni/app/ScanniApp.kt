@@ -31,7 +31,10 @@ fun ScanniApp() {
         composable(AppRoute.Scanner.route) {
             val scannerViewModel: ScannerViewModel = viewModel()
             val state by scannerViewModel.uiState.collectAsStateWithLifecycle()
-            ScannerScreen(state = state)
+            ScannerScreen(
+                state = state,
+                onLibraryClick = { navController.navigate(AppRoute.Library.route) }
+            )
         }
         composable(AppRoute.Library.route) {
             val context = LocalContext.current
