@@ -39,13 +39,21 @@ class LocalDocumentRepository(
     override suspend fun getExportableDocument(documentId: Long): ExportableDocument? {
         val document = documentDao.getById(documentId) ?: return null
         val pages = pageDao.getPagesForDocument(documentId)
+        if (pages.size != document.pageCount) {
+            return null
+        }
+
+        val pageImageUris = pages.map { page -> page.imageUri }
+        if (pageImageUris.any(String::isBlank)) {
+            return null
+        }
 
         return ExportableDocument(
             id = document.id,
             title = document.title,
             pageCount = document.pageCount,
             ocrStatus = document.ocrStatus,
-            pageImageUris = pages.map { page -> page.imageUri }
+            pageImageUris = pageImageUris
         )
     }
 

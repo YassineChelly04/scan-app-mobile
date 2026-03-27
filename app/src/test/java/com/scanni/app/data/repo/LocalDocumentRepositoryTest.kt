@@ -111,4 +111,53 @@ class LocalDocumentRepositoryTest {
             exportable?.pageImageUris
         )
     }
+
+    @Test
+    fun getExportableDocument_returnsNullWhenSavedPagesAreIncomplete() = runTest {
+        val documentId = repository.createDocument(
+            title = "Biology Notes",
+            folderId = null,
+            pageCount = 2
+        )
+        db.pageDao().insertAll(
+            listOf(
+                PageEntity(
+                    documentId = documentId,
+                    pageNumber = 1,
+                    imageUri = "files/page-1-processed.jpg"
+                )
+            )
+        )
+
+        val exportable = repository.getExportableDocument(documentId)
+
+        assertEquals(null, exportable)
+    }
+
+    @Test
+    fun getExportableDocument_returnsNullWhenAnyProcessedPagePathIsBlank() = runTest {
+        val documentId = repository.createDocument(
+            title = "History Review",
+            folderId = null,
+            pageCount = 2
+        )
+        db.pageDao().insertAll(
+            listOf(
+                PageEntity(
+                    documentId = documentId,
+                    pageNumber = 1,
+                    imageUri = "files/page-1-processed.jpg"
+                ),
+                PageEntity(
+                    documentId = documentId,
+                    pageNumber = 2,
+                    imageUri = "   "
+                )
+            )
+        )
+
+        val exportable = repository.getExportableDocument(documentId)
+
+        assertEquals(null, exportable)
+    }
 }
