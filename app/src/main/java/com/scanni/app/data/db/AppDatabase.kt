@@ -15,6 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 abstract class AppDatabase : RoomDatabase() {
     abstract fun documentDao(): DocumentDao
     abstract fun folderDao(): FolderDao
+    abstract fun pageDao(): PageDao
     abstract fun pageTextDao(): PageTextDao
 
     companion object {

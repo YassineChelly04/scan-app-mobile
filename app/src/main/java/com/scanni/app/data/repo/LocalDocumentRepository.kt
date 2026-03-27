@@ -1,15 +1,17 @@
 package com.scanni.app.data.repo
 
-import com.scanni.app.data.db.AppDatabase
 import com.scanni.app.data.db.DocumentDao
 import com.scanni.app.data.db.DocumentEntity
+import com.scanni.app.data.db.PageDao
 import com.scanni.app.data.db.PageTextDao
 import com.scanni.app.data.db.PageTextEntity
+import com.scanni.app.document.ExportableDocument
 import kotlinx.coroutines.flow.Flow
 
 class LocalDocumentRepository(
     private val documentDao: DocumentDao,
-    private val pageTextDao: PageTextDao
+    private val pageTextDao: PageTextDao,
+    private val pageDao: PageDao? = null
 ) : DocumentRepository {
     override fun observeLibrary(query: String): Flow<List<DocumentEntity>> =
         documentDao.observeLibrary(query)
@@ -31,6 +33,19 @@ class LocalDocumentRepository(
                 pageIndex = pageIndex,
                 text = text
             )
+        )
+    }
+
+    override suspend fun getExportableDocument(documentId: Long): ExportableDocument? {
+        val document = documentDao.getById(documentId) ?: return null
+        val pages = pageDao?.getPagesForDocument(documentId).orEmpty()
+
+        return ExportableDocument(
+            id = document.id,
+            title = document.title,
+            pageCount = document.pageCount,
+            ocrStatus = document.ocrStatus,
+            pageImageUris = pages.map { page -> page.imageUri }
         )
     }
 

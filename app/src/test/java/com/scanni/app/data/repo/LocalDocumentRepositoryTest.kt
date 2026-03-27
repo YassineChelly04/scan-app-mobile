@@ -3,6 +3,7 @@ package com.scanni.app.data.repo
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.scanni.app.data.db.AppDatabase
+import com.scanni.app.data.db.PageEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -25,7 +26,8 @@ class LocalDocumentRepositoryTest {
         ).allowMainThreadQueries().build()
         repository = LocalDocumentRepository(
             documentDao = db.documentDao(),
-            pageTextDao = db.pageTextDao()
+            pageTextDao = db.pageTextDao(),
+            pageDao = db.pageDao()
         )
     }
 
@@ -77,5 +79,36 @@ class LocalDocumentRepositoryTest {
 
         assertEquals("final text", pageText?.text)
         assertEquals(listOf("Chemistry Lab"), searchResults.map { it.title })
+    }
+
+    @Test
+    fun getExportableDocument_returnsOrderedProcessedPagePaths() = runTest {
+        val documentId = repository.createDocument(
+            title = "Physics Chapter 3",
+            folderId = null,
+            pageCount = 2
+        )
+        db.pageDao().insertAll(
+            listOf(
+                PageEntity(
+                    documentId = documentId,
+                    pageNumber = 2,
+                    imageUri = "files/page-2-processed.jpg"
+                ),
+                PageEntity(
+                    documentId = documentId,
+                    pageNumber = 1,
+                    imageUri = "files/page-1-processed.jpg"
+                )
+            )
+        )
+
+        val exportable = repository.getExportableDocument(documentId)
+
+        assertEquals("Physics Chapter 3", exportable?.title)
+        assertEquals(
+            listOf("files/page-1-processed.jpg", "files/page-2-processed.jpg"),
+            exportable?.pageImageUris
+        )
     }
 }

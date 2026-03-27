@@ -12,6 +12,15 @@ interface DocumentDao {
 
     @Query(
         """
+        SELECT * FROM documents
+        WHERE id = :documentId
+        LIMIT 1
+        """
+    )
+    suspend fun getById(documentId: Long): DocumentEntity?
+
+    @Query(
+        """
         SELECT DISTINCT documents.* FROM documents
         LEFT JOIN page_text ON page_text.documentId = documents.id
         WHERE :query = ''
