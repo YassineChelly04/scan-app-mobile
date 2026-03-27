@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,17 +45,51 @@ fun ScanniApp() {
     NavHost(navController = navController, startDestination = AppRoute.Scanner.route) {
         composable(AppRoute.Scanner.route) {
             val context = LocalContext.current
+            val lifecycleOwner = LocalLifecycleOwner.current
             val coroutineScope = rememberCoroutineScope()
-            val controller = remember(context) {
-                CameraXScannerController(File(context.cacheDir, "captures"))
+            val controller = remember(context, lifecycleOwner) {
+                CameraXScannerController(
+                    appContext = context,
+                    outputDir = File(context.cacheDir, "captures"),
+                    lifecycleOwnerProvider = { lifecycleOwner }
+                )
             }
             val scannerViewModel: ScannerViewModel = viewModel()
             val state by scannerViewModel.uiState.collectAsStateWithLifecycle()
             ScannerScreen(
                 state = state,
-                onCaptureClick = {
+                onCameraCaptureClick = {
                     coroutineScope.launch {
                         val draft = controller.capturePage()
+                        scannerViewModel.onPageCaptured(draft)
+                        pendingDraft = draft
+                        navController.navigate(AppRoute.Review.route)
+                    }
+                },
+                onSampleCaptureClick = {
+                    coroutineScope.launch {
+                        val outputDir = File(context.cacheDir, "captures")
+                        outputDir.mkdirs()
+                        val draft = CapturedPageDraft(
+                            originalPath = File(outputDir, "sample-original.jpg").absolutePath,
+                            previewPath = File(outputDir, "sample-preview.jpg").absolutePath,
+                            detectedCorners = listOf(
+                                0f, 0f,
+                                1f, 0f,
+                                1f, 1f,
+                                0f, 1f
+                            )
+                        )
+                        CameraXScannerController.writeSampleImage(
+                            File(draft.originalPath),
+                            backgroundColor = android.graphics.Color.rgb(232, 219, 196),
+                            accentColor = android.graphics.Color.rgb(58, 58, 58)
+                        )
+                        CameraXScannerController.writeSampleImage(
+                            File(draft.previewPath),
+                            backgroundColor = android.graphics.Color.rgb(244, 236, 219),
+                            accentColor = android.graphics.Color.rgb(70, 70, 70)
+                        )
                         scannerViewModel.onPageCaptured(draft)
                         pendingDraft = draft
                         navController.navigate(AppRoute.Review.route)

@@ -10,7 +10,7 @@ import com.scanni.app.data.repo.LocalDocumentRepository
 class OcrWorker @JvmOverloads constructor(
     appContext: Context,
     params: WorkerParameters,
-    private val ocrEngine: OcrEngine = MlKitOcrEngine(),
+    private val ocrEngine: OcrEngine = MlKitOcrEngine(appContext),
     private val documentRepository: DocumentRepository = defaultRepository(appContext)
 ) : CoroutineWorker(appContext, params) {
 
