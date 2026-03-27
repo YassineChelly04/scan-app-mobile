@@ -2,10 +2,12 @@ package com.scanni.app.export
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.pdf.PdfDocument
 import java.io.File
 import java.io.OutputStream
 import java.util.WeakHashMap
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,8 +21,32 @@ import org.robolectric.util.ReflectionHelpers
 @Config(shadows = [ShadowPdfDocument::class, ShadowPdfDocumentPage::class])
 class PdfExporterTest {
     @Test
+    fun export_drawsSourcePageContentOntoPdfPage() {
+        val sourceImage = createSolidColorImage(
+            fileName = "source-page.png",
+            color = Color.rgb(24, 128, 72)
+        )
+
+        ShadowPdfDocumentPage.reset()
+
+        PdfExporter().export(
+            pagePaths = listOf(sourceImage.absolutePath),
+            outputFile = File("build/test-output/rendered.pdf")
+        )
+
+        val firstPage = ShadowPdfDocumentPage.firstPageBitmap()
+        assertEquals(
+            Color.rgb(24, 128, 72),
+            firstPage.getPixel(firstPage.width / 2, firstPage.height / 2)
+        )
+    }
+
+    @Test
     fun export_writesPdfFileToDisk() {
-        val samplePagePath = "src/test/resources/samples/document-page.jpg"
+        val samplePagePath = createSolidColorImage(
+            fileName = "document-page.png",
+            color = Color.rgb(48, 96, 180)
+        ).absolutePath
         val output = File("build/test-output/notes.pdf")
         val exporter = PdfExporter()
 
@@ -33,6 +59,20 @@ class PdfExporterTest {
 
         assertTrue(output.exists())
         assertTrue(output.length() > 0)
+    }
+
+    private fun createSolidColorImage(fileName: String, color: Int): File {
+        val file = File("build/test-output/$fileName").apply {
+            parentFile?.mkdirs()
+        }
+        Bitmap.createBitmap(40, 60, Bitmap.Config.ARGB_8888).apply {
+            eraseColor(color)
+            file.outputStream().use { stream ->
+                compress(Bitmap.CompressFormat.PNG, 100, stream)
+            }
+            recycle()
+        }
+        return file
     }
 }
 
@@ -87,8 +127,16 @@ class ShadowPdfDocumentPage {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             pageStates[page] = PageState(
                 canvas = Canvas(bitmap),
-                pageInfo = pageInfo
+                pageInfo = pageInfo,
+                bitmap = bitmap
             )
+        }
+
+        fun firstPageBitmap(): Bitmap = pageStates.values.firstOrNull()?.bitmap
+            ?: error("No rendered pages captured.")
+
+        fun reset() {
+            pageStates.clear()
         }
 
         private fun stateFor(page: PdfDocument.Page): PageState =
@@ -97,7 +145,8 @@ class ShadowPdfDocumentPage {
 
     private data class PageState(
         val canvas: Canvas,
-        val pageInfo: PdfDocument.PageInfo
+        val pageInfo: PdfDocument.PageInfo,
+        val bitmap: Bitmap
     )
 
     @org.robolectric.annotation.RealObject
