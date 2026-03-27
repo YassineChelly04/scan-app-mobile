@@ -71,6 +71,26 @@ class DocumentDetailViewModelTest {
     }
 
     @Test
+    fun load_withMissingDocument_setsNonShareableState() = runTest {
+        val viewModel = DocumentDetailViewModel(
+            documentId = 99L,
+            repository = FakeDocumentRepository(exportableDocument = null),
+            exportPdf = { _, outputFile -> outputFile },
+            outputDir = outputDir
+        )
+
+        viewModel.load()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertFalse(state.isExporting)
+        assertFalse(state.canShare)
+        assertEquals("Document not found.", state.errorMessage)
+        assertNull(state.generatedPdf)
+    }
+
+    @Test
     fun onShareClick_withMissingProcessedPage_setsError() = runTest {
         val missingPath = File(outputDir, "missing.jpg").absolutePath
         val viewModel = DocumentDetailViewModel(
@@ -101,6 +121,40 @@ class DocumentDetailViewModelTest {
     }
 
     @Test
+    fun onShareClick_whenExporterFails_setsErrorAndClearsExportingState() = runTest {
+        val pageOne = File(outputDir, "page-1.jpg").apply {
+            parentFile?.mkdirs()
+            writeText("page-1")
+        }
+        val viewModel = DocumentDetailViewModel(
+            documentId = 15L,
+            repository = FakeDocumentRepository(
+                exportableDocument = ExportableDocument(
+                    id = 15L,
+                    title = "Calculus Notes",
+                    pageCount = 1,
+                    ocrStatus = "complete",
+                    pageImageUris = listOf(pageOne.absolutePath)
+                )
+            ),
+            exportPdf = { _, _ -> throw IllegalStateException("Export failed.") },
+            outputDir = outputDir,
+            exportDispatcher = dispatcher
+        )
+
+        viewModel.load()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onShareClick()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("Export failed.", state.errorMessage)
+        assertFalse(state.isExporting)
+        assertNull(state.generatedPdf)
+    }
+
+    @Test
     fun onShareClick_withAvailableProcessedPages_generatesPdf() = runTest {
         val pageOne = File(outputDir, "page-1.jpg").apply {
             parentFile?.mkdirs()
@@ -128,7 +182,8 @@ class DocumentDetailViewModelTest {
                 exportedOutputFile = outputFile
                 generatedFile
             },
-            outputDir = outputDir
+            outputDir = outputDir,
+            exportDispatcher = dispatcher
         )
 
         viewModel.load()
@@ -145,6 +200,41 @@ class DocumentDetailViewModelTest {
         assertFalse(state.isExporting)
         assertTrue(state.canShare)
         assertNotNull(state.generatedPdf)
+    }
+
+    @Test
+    fun onGeneratedPdfConsumed_clearsGeneratedPdf() = runTest {
+        val pageOne = File(outputDir, "page-1.jpg").apply {
+            parentFile?.mkdirs()
+            writeText("page-1")
+        }
+        val generatedFile = File(outputDir, "document-30.pdf")
+        val viewModel = DocumentDetailViewModel(
+            documentId = 30L,
+            repository = FakeDocumentRepository(
+                exportableDocument = ExportableDocument(
+                    id = 30L,
+                    title = "Literature Notes",
+                    pageCount = 1,
+                    ocrStatus = "complete",
+                    pageImageUris = listOf(pageOne.absolutePath)
+                )
+            ),
+            exportPdf = { _, _ -> generatedFile },
+            outputDir = outputDir,
+            exportDispatcher = dispatcher
+        )
+
+        viewModel.load()
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onShareClick()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(generatedFile, viewModel.uiState.value.generatedPdf)
+
+        viewModel.onGeneratedPdfConsumed()
+
+        assertNull(viewModel.uiState.value.generatedPdf)
     }
 
     private class FakeDocumentRepository(
