@@ -160,4 +160,28 @@ class LocalDocumentRepositoryTest {
 
         assertEquals(null, exportable)
     }
+
+    @Test
+    fun saveProcessedDocument_persistsDocumentAndOrderedPages() = runTest {
+        val documentId = repository.saveProcessedDocument(
+            title = "Lecture Scan",
+            folderId = null,
+            pageImageUris = listOf(
+                "files/page-1-processed.jpg",
+                "files/page-2-processed.jpg"
+            )
+        )
+
+        val libraryResults = repository.observeLibrary("").first()
+        val savedPages = db.pageDao().getPagesForDocument(documentId)
+        val exportable = repository.getExportableDocument(documentId)
+
+        assertEquals(listOf("Lecture Scan"), libraryResults.map { it.title })
+        assertEquals(listOf(1, 2), savedPages.map { it.pageNumber })
+        assertEquals(
+            listOf("files/page-1-processed.jpg", "files/page-2-processed.jpg"),
+            savedPages.map { it.imageUri }
+        )
+        assertEquals(2, exportable?.pageCount)
+    }
 }

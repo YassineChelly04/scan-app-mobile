@@ -1,6 +1,7 @@
 package com.scanni.app.review
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.PageProcessor
@@ -87,5 +88,18 @@ class ReviewViewModel(
                 }
             }
         }
+    }
+
+    companion object {
+        fun factory(processor: PageProcessor): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(ReviewViewModel::class.java)) {
+                        @Suppress("UNCHECKED_CAST")
+                        return ReviewViewModel(processor) as T
+                    }
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+                }
+            }
     }
 }

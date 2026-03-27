@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ScannerScreen(
     state: ScannerUiState,
+    onCaptureClick: () -> Unit,
     onLibraryClick: () -> Unit
 ) {
     Column(
@@ -24,6 +25,9 @@ fun ScannerScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(text = "Pages: ${state.captureCount}")
+        Button(onClick = onCaptureClick) {
+            Text(text = "Capture Sample")
+        }
         Button(onClick = onLibraryClick) {
             Text(text = "Library")
         }

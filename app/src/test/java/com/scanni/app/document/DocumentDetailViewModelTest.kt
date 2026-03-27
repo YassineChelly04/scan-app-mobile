@@ -244,6 +244,12 @@ class DocumentDetailViewModelTest {
 
         override suspend fun createDocument(title: String, folderId: Long?, pageCount: Int): Long = 0L
 
+        override suspend fun saveProcessedDocument(
+            title: String,
+            folderId: Long?,
+            pageImageUris: List<String>
+        ): Long = 0L
+
         override suspend fun savePageText(documentId: Long, pageIndex: Int, text: String) = Unit
 
         override suspend fun getExportableDocument(documentId: Long): ExportableDocument? = exportableDocument

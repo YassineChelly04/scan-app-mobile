@@ -14,8 +14,11 @@ class ScanToLibraryFlowTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun scannerScreen_navigatesToLibrary() {
-        composeRule.onNodeWithText("Library").performClick()
+    fun captureReviewAndSave_navigatesToLibraryWithSavedDocument() {
+        composeRule.onNodeWithText("Capture Sample").performClick()
+        composeRule.onNodeWithTag("review-screen").assertIsDisplayed()
+        composeRule.onNodeWithText("Save Document").performClick()
         composeRule.onNodeWithTag("library-screen").assertIsDisplayed()
+        composeRule.onNodeWithText("Quick Scan").assertIsDisplayed()
     }
 }

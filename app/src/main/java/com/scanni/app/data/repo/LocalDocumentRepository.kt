@@ -26,6 +26,28 @@ class LocalDocumentRepository(
             )
         )
 
+    override suspend fun saveProcessedDocument(
+        title: String,
+        folderId: Long?,
+        pageImageUris: List<String>
+    ): Long {
+        val documentId = createDocument(
+            title = title,
+            folderId = folderId,
+            pageCount = pageImageUris.size
+        )
+        pageDao.insertAll(
+            pageImageUris.mapIndexed { index, imageUri ->
+                com.scanni.app.data.db.PageEntity(
+                    documentId = documentId,
+                    pageNumber = index + 1,
+                    imageUri = imageUri
+                )
+            }
+        )
+        return documentId
+    }
+
     override suspend fun savePageText(documentId: Long, pageIndex: Int, text: String) {
         pageTextDao.upsert(
             PageTextEntity(
