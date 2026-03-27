@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.work.WorkManager
 import com.scanni.app.camera.CameraPreview
 import com.scanni.app.camera.CameraXScannerController
 import com.scanni.app.camera.CapturedPageDraft
@@ -40,6 +41,7 @@ import com.scanni.app.navigation.AppRoute
 import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.OpenCvPageProcessor
 import com.scanni.app.review.ReviewScreen
+import com.scanni.app.review.SaveReviewedDocumentUseCase
 import com.scanni.app.review.ReviewViewModel
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -146,6 +148,12 @@ fun ScanniApp() {
                     pageDao = database.pageDao()
                 )
             }
+            val saveReviewedDocument = remember(repository) {
+                SaveReviewedDocumentUseCase.create(
+                    repository = repository,
+                    workManager = WorkManager.getInstance(context)
+                )
+            }
             val draft = pendingDraft
             val reviewViewModel: ReviewViewModel = viewModel(
                 factory = ReviewViewModel.factory(OpenCvPageProcessor())
@@ -168,7 +176,7 @@ fun ScanniApp() {
                 onSaveClick = {
                     if (state.processedPath.isBlank()) return@ReviewScreen
                     coroutineScope.launch {
-                        repository.saveProcessedDocument(
+                        saveReviewedDocument(
                             title = "Quick Scan",
                             folderId = null,
                             pageImageUris = listOf(state.processedPath)
