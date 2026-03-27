@@ -9,6 +9,7 @@ import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
 import com.scanni.app.data.db.DocumentEntity
 import com.scanni.app.data.repo.DocumentRepository
+import com.scanni.app.document.ExportableDocument
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
@@ -143,5 +144,7 @@ class OcrWorkerTest {
             savedPageIndex = pageIndex
             savedText = text
         }
+
+        override suspend fun getExportableDocument(documentId: Long): ExportableDocument? = null
     }
 }

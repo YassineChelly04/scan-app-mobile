@@ -33,7 +33,8 @@ fun ScanniApp() {
                 factory = LibraryViewModel.factory(
                     repository = LocalDocumentRepository(
                         documentDao = database.documentDao(),
-                        pageTextDao = database.pageTextDao()
+                        pageTextDao = database.pageTextDao(),
+                        pageDao = database.pageDao()
                     ),
                     folderDao = database.folderDao()
                 )

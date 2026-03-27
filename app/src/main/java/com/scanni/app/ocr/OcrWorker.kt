@@ -46,7 +46,8 @@ class OcrWorker @JvmOverloads constructor(
             val database = AppDatabase.getInstance(context)
             return LocalDocumentRepository(
                 documentDao = database.documentDao(),
-                pageTextDao = database.pageTextDao()
+                pageTextDao = database.pageTextDao(),
+                pageDao = database.pageDao()
             )
         }
     }

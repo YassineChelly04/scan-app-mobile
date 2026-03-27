@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 class LocalDocumentRepository(
     private val documentDao: DocumentDao,
     private val pageTextDao: PageTextDao,
-    private val pageDao: PageDao? = null
+    private val pageDao: PageDao
 ) : DocumentRepository {
     override fun observeLibrary(query: String): Flow<List<DocumentEntity>> =
         documentDao.observeLibrary(query)
@@ -38,7 +38,7 @@ class LocalDocumentRepository(
 
     override suspend fun getExportableDocument(documentId: Long): ExportableDocument? {
         val document = documentDao.getById(documentId) ?: return null
-        val pages = pageDao?.getPagesForDocument(documentId).orEmpty()
+        val pages = pageDao.getPagesForDocument(documentId)
 
         return ExportableDocument(
             id = document.id,
