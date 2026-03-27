@@ -6,7 +6,9 @@ import android.graphics.Color
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
@@ -17,6 +19,8 @@ import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class CameraXScannerController(
     private val appContext: Context,
@@ -40,17 +44,50 @@ class CameraXScannerController(
         }
     }
 ) : ScannerCameraController {
+    private val cameraLock = Mutex()
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var imageCapture: ImageCapture? = null
+    private var previewUseCase: Preview? = null
+    private var boundPreviewView: PreviewView? = null
+    private var boundLifecycleOwner: LifecycleOwner? = null
+
+    suspend fun bindPreview(previewView: PreviewView) {
+        cameraLock.withLock {
+            val lifecycleOwner = lifecycleOwnerProvider()
+            if (
+                boundPreviewView === previewView &&
+                boundLifecycleOwner === lifecycleOwner &&
+                cameraProvider != null &&
+                imageCapture != null &&
+                previewUseCase != null
+            ) {
+                return
+            }
+
+            boundPreviewView = previewView
+            bindCameraUseCases(lifecycleOwner)
+        }
+    }
 
     override suspend fun capturePage(): CapturedPageDraft {
         outputDir.mkdirs()
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())
         val originalFile = File(outputDir, "scan_${timestamp}_original.jpg")
         val previewFile = File(outputDir, "scan_${timestamp}_preview.jpg")
-        captureWithCamera(
-            originalFile,
-            previewFile,
-            lifecycleOwnerProvider()
-        )
+        cameraLock.withLock {
+            val lifecycleOwner = lifecycleOwnerProvider()
+            if (boundPreviewView != null) {
+                bindCameraUseCases(lifecycleOwner)
+                imageCapture?.captureToFile(appContext, originalFile)
+                originalFile.copyTo(previewFile, overwrite = true)
+            } else {
+                captureWithCamera(
+                    originalFile,
+                    previewFile,
+                    lifecycleOwner
+                )
+            }
+        }
 
         return CapturedPageDraft(
             originalPath = originalFile.absolutePath,
@@ -80,6 +117,37 @@ class CameraXScannerController(
                 recycle()
             }
         }
+    }
+
+    private suspend fun bindCameraUseCases(lifecycleOwner: LifecycleOwner) {
+        val provider = cameraProvider ?: ProcessCameraProvider.getInstance(appContext).await().also {
+            cameraProvider = it
+        }
+        val preview = previewUseCase ?: Preview.Builder().build().also {
+            previewUseCase = it
+        }
+        val capture = imageCapture ?: ImageCapture.Builder().build().also {
+            imageCapture = it
+        }
+
+        boundPreviewView?.let { previewView ->
+            preview.surfaceProvider = previewView.surfaceProvider
+        }
+
+        provider.unbindAll()
+        boundPreviewView?.let {
+            provider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                preview,
+                capture
+            )
+        } ?: provider.bindToLifecycle(
+            lifecycleOwner,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            capture
+        )
+        boundLifecycleOwner = lifecycleOwner
     }
 }
 

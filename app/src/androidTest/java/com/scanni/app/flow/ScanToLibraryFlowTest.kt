@@ -1,6 +1,7 @@
 package com.scanni.app.flow
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -17,7 +18,23 @@ class ScanToLibraryFlowTest {
     fun captureReviewAndSave_navigatesToLibraryWithSavedDocument() {
         composeRule.onNodeWithText("Capture Sample").performClick()
         composeRule.onNodeWithTag("review-screen").assertIsDisplayed()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            try {
+                composeRule.onNodeWithText("Save Document").assertIsEnabled()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
         composeRule.onNodeWithText("Save Document").performClick()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            try {
+                composeRule.onNodeWithTag("library-screen").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
         composeRule.onNodeWithTag("library-screen").assertIsDisplayed()
         composeRule.onNodeWithText("Quick Scan").assertIsDisplayed()
     }

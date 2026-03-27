@@ -1,6 +1,11 @@
 package com.scanni.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,12 +14,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.scanni.app.camera.CameraPreview
 import com.scanni.app.camera.CameraXScannerController
 import com.scanni.app.camera.CapturedPageDraft
 import com.scanni.app.camera.ScannerScreen
@@ -47,6 +56,14 @@ fun ScanniApp() {
             val context = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
             val coroutineScope = rememberCoroutineScope()
+            var hasCameraPermission by remember(context) {
+                mutableStateOf(context.hasCameraPermission())
+            }
+            val cameraPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                hasCameraPermission = granted
+            }
             val controller = remember(context, lifecycleOwner) {
                 CameraXScannerController(
                     appContext = context,
@@ -56,8 +73,28 @@ fun ScanniApp() {
             }
             val scannerViewModel: ScannerViewModel = viewModel()
             val state by scannerViewModel.uiState.collectAsStateWithLifecycle()
+
+            DisposableEffect(lifecycleOwner, context) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        hasCameraPermission = context.hasCameraPermission()
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
+
             ScannerScreen(
                 state = state,
+                hasCameraPermission = hasCameraPermission,
+                cameraPreview = {
+                    CameraPreview(controller = controller)
+                },
+                onGrantCameraAccessClick = {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                },
                 onCameraCaptureClick = {
                     coroutineScope.launch {
                         val draft = controller.capturePage()
@@ -211,3 +248,6 @@ fun ScanniApp() {
         }
     }
 }
+
+private fun android.content.Context.hasCameraPermission(): Boolean =
+    ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
