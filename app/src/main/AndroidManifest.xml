@@ -5,6 +5,11 @@
         android:allowBackup="true"
         android:label="Scanni"
         android:supportsRtl="true">
+        <provider
+            android:name=".export.LocalPdfShareProvider"
+            android:authorities="${applicationId}.pdfprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
