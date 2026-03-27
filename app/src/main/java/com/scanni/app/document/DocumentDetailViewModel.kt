@@ -1,6 +1,7 @@
 package com.scanni.app.document
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.scanni.app.data.repo.DocumentRepository
 import com.scanni.app.export.PdfExporter
@@ -101,5 +102,30 @@ class DocumentDetailViewModel(
 
     fun onGeneratedPdfConsumed() {
         _uiState.update { state -> state.copy(generatedPdf = null) }
+    }
+
+    companion object {
+        fun factory(
+            documentId: Long,
+            repository: DocumentRepository,
+            pdfExporter: PdfExporter,
+            outputDir: File,
+            exportDispatcher: CoroutineDispatcher = Dispatchers.IO
+        ): ViewModelProvider.Factory =
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(DocumentDetailViewModel::class.java)) {
+                        @Suppress("UNCHECKED_CAST")
+                        return DocumentDetailViewModel(
+                            documentId = documentId,
+                            repository = repository,
+                            exportPdf = pdfExporter::export,
+                            outputDir = outputDir,
+                            exportDispatcher = exportDispatcher
+                        ) as T
+                    }
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+                }
+            }
     }
 }
