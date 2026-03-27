@@ -12,8 +12,11 @@ interface DocumentDao {
 
     @Query(
         """
-        SELECT * FROM documents
-        WHERE :query = '' OR title LIKE '%' || :query || '%'
+        SELECT DISTINCT documents.* FROM documents
+        LEFT JOIN page_text ON page_text.documentId = documents.id
+        WHERE :query = ''
+            OR documents.title LIKE '%' || :query || '%'
+            OR page_text.text LIKE '%' || :query || '%'
         ORDER BY createdAt DESC
         """
     )
