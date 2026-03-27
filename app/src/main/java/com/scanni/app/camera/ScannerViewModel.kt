@@ -19,4 +19,8 @@ class ScannerViewModel : ViewModel() {
             )
         }
     }
+
+    fun clearSession() {
+        _uiState.value = ScannerUiState()
+    }
 }

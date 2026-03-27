@@ -15,6 +15,7 @@ import com.scanni.app.processing.EnhancementMode
 fun ReviewScreen(
     state: PageReviewState,
     onModeChange: (EnhancementMode) -> Unit,
+    onAddAnotherPageClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
     Column(modifier = Modifier.testTag("review-screen")) {
@@ -31,6 +32,9 @@ fun ReviewScreen(
             Button(onClick = { onModeChange(EnhancementMode.WHITEBOARD) }) {
                 Text(text = "Whiteboard")
             }
+        }
+        Button(onClick = onAddAnotherPageClick) {
+            Text(text = "Add Another Page")
         }
         Button(
             onClick = onSaveClick,

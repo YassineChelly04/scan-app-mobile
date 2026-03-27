@@ -42,6 +42,7 @@ import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.OpenCvPageProcessor
 import com.scanni.app.review.ReviewScreen
 import com.scanni.app.review.SaveReviewedDocumentUseCase
+import com.scanni.app.review.SaveReviewSessionUseCase
 import com.scanni.app.review.ReviewViewModel
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun ScanniApp() {
     val navController = rememberNavController()
-    var pendingDraft by remember { mutableStateOf<CapturedPageDraft?>(null) }
+    val scannerViewModel: ScannerViewModel = viewModel()
+    val scannerState by scannerViewModel.uiState.collectAsStateWithLifecycle()
 
     NavHost(navController = navController, startDestination = AppRoute.Scanner.route) {
         composable(AppRoute.Scanner.route) {
@@ -73,8 +75,6 @@ fun ScanniApp() {
                     lifecycleOwnerProvider = { lifecycleOwner }
                 )
             }
-            val scannerViewModel: ScannerViewModel = viewModel()
-            val state by scannerViewModel.uiState.collectAsStateWithLifecycle()
 
             DisposableEffect(lifecycleOwner, context) {
                 val observer = LifecycleEventObserver { _, event ->
@@ -89,7 +89,7 @@ fun ScanniApp() {
             }
 
             ScannerScreen(
-                state = state,
+                state = scannerState,
                 hasCameraPermission = hasCameraPermission,
                 cameraPreview = {
                     CameraPreview(controller = controller)
@@ -101,24 +101,12 @@ fun ScanniApp() {
                     coroutineScope.launch {
                         val draft = controller.capturePage()
                         scannerViewModel.onPageCaptured(draft)
-                        pendingDraft = draft
                         navController.navigate(AppRoute.Review.route)
                     }
                 },
                 onSampleCaptureClick = {
                     coroutineScope.launch {
-                        val outputDir = File(context.cacheDir, "captures")
-                        outputDir.mkdirs()
-                        val draft = CapturedPageDraft(
-                            originalPath = File(outputDir, "sample-original.jpg").absolutePath,
-                            previewPath = File(outputDir, "sample-preview.jpg").absolutePath,
-                            detectedCorners = listOf(
-                                0f, 0f,
-                                1f, 0f,
-                                1f, 1f,
-                                0f, 1f
-                            )
-                        )
+                        val draft = createSampleDraft(context)
                         CameraXScannerController.writeSampleImage(
                             File(draft.originalPath),
                             backgroundColor = android.graphics.Color.rgb(232, 219, 196),
@@ -130,11 +118,13 @@ fun ScanniApp() {
                             accentColor = android.graphics.Color.rgb(70, 70, 70)
                         )
                         scannerViewModel.onPageCaptured(draft)
-                        pendingDraft = draft
                         navController.navigate(AppRoute.Review.route)
                     }
                 },
-                onLibraryClick = { navController.navigate(AppRoute.Library.route) }
+                onLibraryClick = {
+                    scannerViewModel.clearSession()
+                    navController.navigate(AppRoute.Library.route)
+                }
             )
         }
         composable(AppRoute.Review.route) {
@@ -154,7 +144,13 @@ fun ScanniApp() {
                     workManager = WorkManager.getInstance(context)
                 )
             }
-            val draft = pendingDraft
+            val saveReviewSession = remember(saveReviewedDocument) {
+                SaveReviewSessionUseCase(
+                    processor = OpenCvPageProcessor(),
+                    saveReviewedDocument = saveReviewedDocument::invoke
+                )
+            }
+            val draft = scannerState.pages.lastOrNull()
             val reviewViewModel: ReviewViewModel = viewModel(
                 factory = ReviewViewModel.factory(OpenCvPageProcessor())
             )
@@ -173,16 +169,20 @@ fun ScanniApp() {
             ReviewScreen(
                 state = state,
                 onModeChange = reviewViewModel::changeMode,
+                onAddAnotherPageClick = {
+                    navController.popBackStack()
+                },
                 onSaveClick = {
-                    if (state.processedPath.isBlank()) return@ReviewScreen
+                    if (state.processedPath.isBlank() || scannerState.pages.isEmpty()) return@ReviewScreen
                     coroutineScope.launch {
-                        saveReviewedDocument(
+                        saveReviewSession(
                             title = "Quick Scan",
                             folderId = null,
-                            pageImageUris = listOf(state.processedPath)
+                            pages = scannerState.pages,
+                            mode = state.mode
                         )
                         withContext(Dispatchers.Main.immediate) {
-                            pendingDraft = null
+                            scannerViewModel.clearSession()
                             navController.navigate(AppRoute.Library.route) {
                                 popUpTo(AppRoute.Scanner.route)
                             }
@@ -263,3 +263,19 @@ fun ScanniApp() {
 
 private fun android.content.Context.hasCameraPermission(): Boolean =
     ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+private fun createSampleDraft(context: android.content.Context): CapturedPageDraft {
+    val outputDir = File(context.cacheDir, "captures").apply { mkdirs() }
+    val originalFile = File.createTempFile("sample_", "_original.jpg", outputDir)
+    val previewFile = File.createTempFile("sample_", "_preview.jpg", outputDir)
+    return CapturedPageDraft(
+        originalPath = originalFile.absolutePath,
+        previewPath = previewFile.absolutePath,
+        detectedCorners = listOf(
+            0f, 0f,
+            1f, 0f,
+            1f, 1f,
+            0f, 1f
+        )
+    )
+}

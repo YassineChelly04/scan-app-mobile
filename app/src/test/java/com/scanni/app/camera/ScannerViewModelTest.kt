@@ -51,4 +51,21 @@ class ScannerViewModelTest {
             assertEquals(secondPage, secondUpdate.pages[1])
         }
     }
+
+    @Test
+    fun clearSession_resetsCapturedPagesAndCount() = runTest {
+        val viewModel = ScannerViewModel()
+
+        viewModel.onPageCaptured(
+            CapturedPageDraft(
+                originalPath = "original.jpg",
+                previewPath = "preview.jpg",
+                detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+            )
+        )
+
+        viewModel.clearSession()
+
+        assertEquals(ScannerUiState(), viewModel.uiState.value)
+    }
 }
