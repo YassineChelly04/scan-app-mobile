@@ -46,4 +46,32 @@ class DocumentDetailScreenTest {
 
         composeRule.onNodeWithText("Processed page file missing.").assertIsDisplayed()
     }
+
+    @Test
+    fun documentDetailScreen_showsMetadataEditingControls() {
+        composeRule.setContent {
+            DocumentDetailScreen(
+                state = DocumentDetailUiState(
+                    title = "Lecture Notes",
+                    editableTitle = "Lecture Notes",
+                    pageCount = 3,
+                    ocrStatus = "pending",
+                    isLoading = false,
+                    canShare = true,
+                    canSaveMetadata = true,
+                    selectedFolderId = 7L,
+                    availableFolders = listOf(
+                        DocumentFolderOption(id = 7L, name = "Semester 2")
+                    )
+                ),
+                onTitleChange = {},
+                onFolderSelected = {},
+                onSaveDetailsClick = {},
+                onShareClick = {}
+            )
+        }
+
+        composeRule.onNodeWithText("Save Details").assertIsDisplayed()
+        composeRule.onNodeWithText("Semester 2 (Selected)").assertIsDisplayed()
+    }
 }

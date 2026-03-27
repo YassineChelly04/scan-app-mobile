@@ -68,6 +68,8 @@ class SaveReviewedDocumentUseCaseTest {
 
         override suspend fun savePageText(documentId: Long, pageIndex: Int, text: String) = Unit
 
+        override suspend fun updateDocument(documentId: Long, title: String, folderId: Long?) = Unit
+
         override suspend fun getExportableDocument(documentId: Long): ExportableDocument? = null
     }
 }

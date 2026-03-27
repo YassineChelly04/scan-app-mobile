@@ -9,5 +9,6 @@ interface DocumentRepository {
     suspend fun createDocument(title: String, folderId: Long?, pageCount: Int): Long
     suspend fun saveProcessedDocument(title: String, folderId: Long?, pageImageUris: List<String>): Long
     suspend fun savePageText(documentId: Long, pageIndex: Int, text: String)
+    suspend fun updateDocument(documentId: Long, title: String, folderId: Long?)
     suspend fun getExportableDocument(documentId: Long): ExportableDocument?
 }

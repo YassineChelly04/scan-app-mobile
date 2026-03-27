@@ -5,5 +5,6 @@ data class ExportableDocument(
     val title: String,
     val pageCount: Int,
     val ocrStatus: String,
+    val folderId: Long? = null,
     val pageImageUris: List<String>
 )

@@ -1,11 +1,13 @@
 package com.scanni.app.document
 
 import com.scanni.app.data.db.DocumentEntity
+import com.scanni.app.data.db.FolderEntity
 import com.scanni.app.data.repo.DocumentRepository
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -237,9 +239,63 @@ class DocumentDetailViewModelTest {
         assertNull(viewModel.uiState.value.generatedPdf)
     }
 
+    @Test
+    fun onSaveDetailsClick_updatesTitleAndFolder() = runTest {
+        val folderFlow = MutableStateFlow(
+            listOf(
+                FolderEntity(id = 3L, name = "Semester 1"),
+                FolderEntity(id = 7L, name = "Semester 2")
+            )
+        )
+        val repository = FakeDocumentRepository(
+            exportableDocument = ExportableDocument(
+                id = 44L,
+                title = "Draft Notes",
+                pageCount = 2,
+                ocrStatus = "pending",
+                folderId = 3L,
+                pageImageUris = listOf(
+                    File(outputDir, "page-1.jpg").absolutePath,
+                    File(outputDir, "page-2.jpg").absolutePath
+                )
+            )
+        )
+        val viewModel = DocumentDetailViewModel(
+            documentId = 44L,
+            repository = repository,
+            observeFolders = { folderFlow },
+            exportPdf = { _, outputFile -> outputFile },
+            outputDir = outputDir
+        )
+
+        viewModel.load()
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onTitleChange("Final Notes")
+        viewModel.onFolderSelected(7L)
+        viewModel.onSaveDetailsClick()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(44L, repository.updatedDocumentId)
+        assertEquals("Final Notes", repository.updatedTitle)
+        assertEquals(7L, repository.updatedFolderId)
+        assertEquals("Final Notes", state.title)
+        assertEquals("Final Notes", state.editableTitle)
+        assertEquals(7L, state.selectedFolderId)
+        assertEquals(false, state.isSavingMetadata)
+        assertEquals(
+            listOf("Semester 1", "Semester 2"),
+            state.availableFolders.map { it.name }
+        )
+    }
+
     private class FakeDocumentRepository(
         private val exportableDocument: ExportableDocument?
     ) : DocumentRepository {
+        var updatedDocumentId: Long? = null
+        var updatedTitle: String? = null
+        var updatedFolderId: Long? = null
+
         override fun observeLibrary(query: String): Flow<List<DocumentEntity>> = emptyFlow()
 
         override suspend fun createDocument(title: String, folderId: Long?, pageCount: Int): Long = 0L
@@ -251,6 +307,12 @@ class DocumentDetailViewModelTest {
         ): Long = 0L
 
         override suspend fun savePageText(documentId: Long, pageIndex: Int, text: String) = Unit
+
+        override suspend fun updateDocument(documentId: Long, title: String, folderId: Long?) {
+            updatedDocumentId = documentId
+            updatedTitle = title
+            updatedFolderId = folderId
+        }
 
         override suspend fun getExportableDocument(documentId: Long): ExportableDocument? = exportableDocument
     }

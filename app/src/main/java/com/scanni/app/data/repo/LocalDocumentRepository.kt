@@ -58,6 +58,14 @@ class LocalDocumentRepository(
         )
     }
 
+    override suspend fun updateDocument(documentId: Long, title: String, folderId: Long?) {
+        documentDao.updateDocument(
+            documentId = documentId,
+            title = title,
+            folderId = folderId
+        )
+    }
+
     override suspend fun getExportableDocument(documentId: Long): ExportableDocument? {
         val document = documentDao.getById(documentId) ?: return null
         val pages = pageDao.getPagesForDocument(documentId)
@@ -75,6 +83,7 @@ class LocalDocumentRepository(
             title = document.title,
             pageCount = document.pageCount,
             ocrStatus = document.ocrStatus,
+            folderId = document.folderId,
             pageImageUris = pageImageUris
         )
     }

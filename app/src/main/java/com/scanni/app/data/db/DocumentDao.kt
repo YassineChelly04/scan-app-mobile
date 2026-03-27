@@ -21,6 +21,15 @@ interface DocumentDao {
 
     @Query(
         """
+        UPDATE documents
+        SET title = :title, folderId = :folderId
+        WHERE id = :documentId
+        """
+    )
+    suspend fun updateDocument(documentId: Long, title: String, folderId: Long?)
+
+    @Query(
+        """
         SELECT DISTINCT documents.* FROM documents
         LEFT JOIN page_text ON page_text.documentId = documents.id
         WHERE :query = ''

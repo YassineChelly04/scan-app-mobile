@@ -226,6 +226,7 @@ fun ScanniApp() {
                         pageTextDao = database.pageTextDao(),
                         pageDao = database.pageDao()
                     ),
+                    folderDao = database.folderDao(),
                     pdfExporter = PdfExporter(),
                     outputDir = File(context.cacheDir, "exports")
                 )
@@ -239,6 +240,9 @@ fun ScanniApp() {
 
             DocumentDetailScreen(
                 state = state,
+                onTitleChange = viewModel::onTitleChange,
+                onFolderSelected = viewModel::onFolderSelected,
+                onSaveDetailsClick = viewModel::onSaveDetailsClick,
                 onShareClick = viewModel::onShareClick
             )
 
