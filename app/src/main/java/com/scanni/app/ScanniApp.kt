@@ -38,7 +38,6 @@ import com.scanni.app.export.ShareDocumentUseCase
 import com.scanni.app.library.LibraryScreen
 import com.scanni.app.library.LibraryViewModel
 import com.scanni.app.navigation.AppRoute
-import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.OpenCvPageProcessor
 import com.scanni.app.review.ReviewScreen
 import com.scanni.app.review.SaveReviewedDocumentUseCase
@@ -174,14 +173,7 @@ fun ScanniApp() {
                         saveReviewSession(
                             title = "Quick Scan",
                             folderId = null,
-                            pages = state.pages.map { page ->
-                                CapturedPageDraft(
-                                    originalPath = page.originalPath,
-                                    previewPath = page.originalPath,
-                                    detectedCorners = page.corners
-                                )
-                            },
-                            mode = state.activePage?.mode ?: EnhancementMode.DOCUMENT
+                            pages = state.pages
                         )
                         withContext(Dispatchers.Main.immediate) {
                             scannerViewModel.clearSession()
