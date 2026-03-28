@@ -158,11 +158,7 @@ fun ScanniApp() {
 
             LaunchedEffect(draft?.originalPath) {
                 draft?.let {
-                    reviewViewModel.loadDraft(
-                        originalPath = it.originalPath,
-                        corners = it.detectedCorners
-                    )
-                    reviewViewModel.changeMode(EnhancementMode.DOCUMENT)
+                    reviewViewModel.loadSession(listOf(it))
                 }
             }
 
@@ -173,13 +169,19 @@ fun ScanniApp() {
                     navController.popBackStack()
                 },
                 onSaveClick = {
-                    if (state.processedPath.isBlank() || scannerState.pages.isEmpty()) return@ReviewScreen
+                    if (state.activePage?.processedPath.isNullOrBlank() || scannerState.pages.isEmpty()) return@ReviewScreen
                     coroutineScope.launch {
                         saveReviewSession(
                             title = "Quick Scan",
                             folderId = null,
-                            pages = scannerState.pages,
-                            mode = state.mode
+                            pages = state.pages.map { page ->
+                                CapturedPageDraft(
+                                    originalPath = page.originalPath,
+                                    previewPath = page.originalPath,
+                                    detectedCorners = page.corners
+                                )
+                            },
+                            mode = state.activePage?.mode ?: EnhancementMode.DOCUMENT
                         )
                         withContext(Dispatchers.Main.immediate) {
                             scannerViewModel.clearSession()

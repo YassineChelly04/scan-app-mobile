@@ -1,17 +1,18 @@
 package com.scanni.app.review
 
 import app.cash.turbine.test
+import com.scanni.app.camera.CapturedPageDraft
 import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.PageProcessor
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.Assert.assertEquals
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -30,175 +31,208 @@ class ReviewViewModelTest {
     }
 
     @Test
-    fun changeMode_reprocessesPageWithoutLosingOriginal() = runTest {
-        val calls = mutableListOf<Pair<String, EnhancementMode>>()
+    fun loadSession_initializesAllPagesAndProcessesFirstPage() = runTest {
+        val requests = mutableListOf<Triple<String, EnhancementMode, List<Float>>>()
         val processor = object : PageProcessor {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
                 corners: List<Float>
             ): String {
-                calls += originalPath to mode
+                requests += Triple(originalPath, mode, corners)
                 return "$originalPath-${mode.name.lowercase()}.jpg"
             }
         }
-        val corners = listOf(
-            0f, 0f,
-            100f, 0f,
-            100f, 100f,
-            0f, 100f
-        )
         val viewModel = ReviewViewModel(processor)
 
         viewModel.uiState.test {
-            assertEquals(PageReviewState(), awaitItem())
+            assertEquals(ReviewUiState(), awaitItem())
 
-            viewModel.loadDraft(
-                originalPath = "files/original-1.jpg",
-                corners = corners
+            viewModel.loadSession(
+                listOf(
+                    CapturedPageDraft(
+                        originalPath = "files/page-1.jpg",
+                        previewPath = "files/page-1-preview.jpg",
+                        detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                    ),
+                    CapturedPageDraft(
+                        originalPath = "files/page-2.jpg",
+                        previewPath = "files/page-2-preview.jpg",
+                        detectedCorners = listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)
+                    )
+                )
             )
+
+            val loadingState = awaitItem()
+            assertEquals(2, loadingState.pages.size)
+            assertEquals(0, loadingState.activePageIndex)
+            assertEquals(true, loadingState.activePage?.isProcessing)
+            assertEquals("", loadingState.activePage?.processedPath)
+
+            dispatcher.scheduler.advanceUntilIdle()
+
             val loadedState = awaitItem()
-            assertEquals("files/original-1.jpg", loadedState.originalPath)
-            assertEquals("", loadedState.processedPath)
-            assertEquals(EnhancementMode.DOCUMENT, loadedState.mode)
-            assertEquals(corners, loadedState.corners)
-            assertEquals(false, loadedState.isProcessing)
-            assertEquals(null, loadedState.errorMessage)
-
-            viewModel.changeMode(EnhancementMode.BOOK)
-            val loadingBookState = awaitItem()
-            assertEquals("", loadingBookState.processedPath)
-            assertEquals(EnhancementMode.BOOK, loadingBookState.mode)
-            assertEquals(true, loadingBookState.isProcessing)
-            assertEquals(null, loadingBookState.errorMessage)
-
-            dispatcher.scheduler.advanceUntilIdle()
-            val bookState = awaitItem()
-            assertEquals("files/original-1.jpg", bookState.originalPath)
-            assertEquals("files/original-1.jpg-book.jpg", bookState.processedPath)
-            assertEquals(EnhancementMode.BOOK, bookState.mode)
-            assertEquals(corners, bookState.corners)
-            assertEquals(false, bookState.isProcessing)
-            assertEquals(null, bookState.errorMessage)
-
-            viewModel.changeMode(EnhancementMode.WHITEBOARD)
-            val loadingWhiteboardState = awaitItem()
-            assertEquals("", loadingWhiteboardState.processedPath)
-            assertEquals(EnhancementMode.WHITEBOARD, loadingWhiteboardState.mode)
-            assertEquals(true, loadingWhiteboardState.isProcessing)
-            assertEquals(null, loadingWhiteboardState.errorMessage)
-
-            dispatcher.scheduler.advanceUntilIdle()
-            val whiteboardState = awaitItem()
-            assertEquals("files/original-1.jpg", whiteboardState.originalPath)
-            assertEquals("files/original-1.jpg-whiteboard.jpg", whiteboardState.processedPath)
-            assertEquals(EnhancementMode.WHITEBOARD, whiteboardState.mode)
-            assertEquals(corners, whiteboardState.corners)
-            assertEquals(false, whiteboardState.isProcessing)
-            assertEquals(null, whiteboardState.errorMessage)
-
+            assertEquals("files/page-1.jpg-document.jpg", loadedState.activePage?.processedPath)
+            assertEquals(false, loadedState.activePage?.isProcessing)
             assertEquals(
                 listOf(
-                    "files/original-1.jpg" to EnhancementMode.BOOK,
-                    "files/original-1.jpg" to EnhancementMode.WHITEBOARD
+                    Triple(
+                        "files/page-1.jpg",
+                        EnhancementMode.DOCUMENT,
+                        listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                    )
                 ),
-                calls
+                requests
             )
         }
     }
 
     @Test
-    fun changeMode_ignoresOlderResultWhenNewerRequestFinishesLater() = runTest {
-        val bookResult = CompletableDeferred<String>()
-        val whiteboardResult = CompletableDeferred<String>()
-        val processor = object : PageProcessor {
-            override suspend fun process(
-                originalPath: String,
-                mode: EnhancementMode,
-                corners: List<Float>
-            ): String = when (mode) {
-                EnhancementMode.BOOK -> bookResult.await()
-                EnhancementMode.WHITEBOARD -> whiteboardResult.await()
-                EnhancementMode.DOCUMENT -> "$originalPath-document.jpg"
-            }
-        }
-        val viewModel = ReviewViewModel(processor)
-
-        viewModel.uiState.test {
-            assertEquals(PageReviewState(), awaitItem())
-
-            viewModel.loadDraft(
-                originalPath = "files/original-1.jpg",
-                corners = listOf(0f, 0f, 100f, 0f, 100f, 100f, 0f, 100f)
-            )
-            val loadedState = awaitItem()
-            assertEquals("", loadedState.processedPath)
-            assertEquals(false, loadedState.isProcessing)
-
-            viewModel.changeMode(EnhancementMode.BOOK)
-            val loadingBookState = awaitItem()
-            assertEquals(EnhancementMode.BOOK, loadingBookState.mode)
-            assertEquals(true, loadingBookState.isProcessing)
-            assertEquals("", loadingBookState.processedPath)
-
-            viewModel.changeMode(EnhancementMode.WHITEBOARD)
-            val loadingWhiteboardState = awaitItem()
-            assertEquals(EnhancementMode.WHITEBOARD, loadingWhiteboardState.mode)
-            assertEquals(true, loadingWhiteboardState.isProcessing)
-            assertEquals("", loadingWhiteboardState.processedPath)
-
-            whiteboardResult.complete("files/original-1.jpg-whiteboard.jpg")
-            dispatcher.scheduler.advanceUntilIdle()
-
-            val whiteboardState = awaitItem()
-            assertEquals("files/original-1.jpg-whiteboard.jpg", whiteboardState.processedPath)
-            assertEquals(EnhancementMode.WHITEBOARD, whiteboardState.mode)
-            assertEquals(false, whiteboardState.isProcessing)
-            assertEquals(null, whiteboardState.errorMessage)
-
-            bookResult.complete("files/original-1.jpg-book.jpg")
-            dispatcher.scheduler.advanceUntilIdle()
-
-            expectNoEvents()
-        }
-    }
-
-    @Test
-    fun changeMode_exposesProcessorFailureInState() = runTest {
+    fun selectPage_preservesPerPageModeAndCorners() = runTest {
+        val requests = mutableListOf<Triple<String, EnhancementMode, List<Float>>>()
         val processor = object : PageProcessor {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
                 corners: List<Float>
             ): String {
-                throw IllegalStateException("processing failed")
+                requests += Triple(originalPath, mode, corners)
+                return "$originalPath-${mode.name.lowercase()}.jpg"
+            }
+        }
+        val updatedCorners = listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f)
+        val viewModel = ReviewViewModel(processor)
+
+        viewModel.loadSession(
+            listOf(
+                CapturedPageDraft(
+                    originalPath = "files/page-1.jpg",
+                    previewPath = "files/page-1-preview.jpg",
+                    detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                ),
+                CapturedPageDraft(
+                    originalPath = "files/page-2.jpg",
+                    previewPath = "files/page-2-preview.jpg",
+                    detectedCorners = listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)
+                )
+            )
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.changeMode(EnhancementMode.BOOK)
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateActiveCorners(updatedCorners)
+        viewModel.confirmActiveCrop()
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.selectPage(1)
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.selectPage(0)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(0, state.activePageIndex)
+        assertEquals(EnhancementMode.BOOK, state.activePage?.mode)
+        assertEquals(updatedCorners, state.activePage?.corners)
+        assertEquals("files/page-1.jpg-book.jpg", state.activePage?.processedPath)
+        assertEquals(
+            listOf(
+                Triple("files/page-1.jpg", EnhancementMode.DOCUMENT, listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)),
+                Triple("files/page-1.jpg", EnhancementMode.BOOK, listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)),
+                Triple("files/page-1.jpg", EnhancementMode.BOOK, updatedCorners),
+                Triple("files/page-2.jpg", EnhancementMode.DOCUMENT, listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f))
+            ),
+            requests
+        )
+    }
+
+    @Test
+    fun confirmActiveCrop_reprocessesOnlyTheSelectedPage() = runTest {
+        val requests = mutableListOf<Triple<String, EnhancementMode, List<Float>>>()
+        val processor = object : PageProcessor {
+            override suspend fun process(
+                originalPath: String,
+                mode: EnhancementMode,
+                corners: List<Float>
+            ): String {
+                requests += Triple(originalPath, mode, corners)
+                return "$originalPath-${mode.name.lowercase()}.jpg"
             }
         }
         val viewModel = ReviewViewModel(processor)
 
-        viewModel.uiState.test {
-            assertEquals(PageReviewState(), awaitItem())
-
-            viewModel.loadDraft(
-                originalPath = "files/original-1.jpg",
-                corners = listOf(0f, 0f, 100f, 0f, 100f, 100f, 0f, 100f)
+        viewModel.loadSession(
+            listOf(
+                CapturedPageDraft(
+                    originalPath = "files/page-1.jpg",
+                    previewPath = "files/page-1-preview.jpg",
+                    detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                ),
+                CapturedPageDraft(
+                    originalPath = "files/page-2.jpg",
+                    previewPath = "files/page-2-preview.jpg",
+                    detectedCorners = listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)
+                )
             )
-            awaitItem()
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+        requests.clear()
 
-            viewModel.changeMode(EnhancementMode.BOOK)
-            val loadingState = awaitItem()
-            assertEquals(EnhancementMode.BOOK, loadingState.mode)
-            assertEquals(true, loadingState.isProcessing)
-            assertEquals(null, loadingState.errorMessage)
+        viewModel.selectPage(1)
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateActiveCorners(listOf(0.2f, 0.2f, 0.8f, 0.2f, 0.8f, 0.8f, 0.2f, 0.8f))
+        viewModel.confirmActiveCrop()
+        dispatcher.scheduler.advanceUntilIdle()
 
-            dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(
+            listOf(
+                Triple("files/page-2.jpg", EnhancementMode.DOCUMENT, listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)),
+                Triple("files/page-2.jpg", EnhancementMode.DOCUMENT, listOf(0.2f, 0.2f, 0.8f, 0.2f, 0.8f, 0.8f, 0.2f, 0.8f))
+            ),
+            requests
+        )
+    }
 
-            val failedState = awaitItem()
-            assertEquals("files/original-1.jpg", failedState.originalPath)
-            assertEquals("", failedState.processedPath)
-            assertEquals(EnhancementMode.BOOK, failedState.mode)
-            assertEquals(false, failedState.isProcessing)
-            assertEquals("processing failed", failedState.errorMessage)
+    @Test
+    fun processingFailure_staysOnTheFailingPageOnly() = runTest {
+        val processor = object : PageProcessor {
+            override suspend fun process(
+                originalPath: String,
+                mode: EnhancementMode,
+                corners: List<Float>
+            ): String {
+                if (originalPath.contains("page-2")) {
+                    throw IllegalStateException("processing failed")
+                }
+                return "$originalPath-${mode.name.lowercase()}.jpg"
+            }
         }
+        val viewModel = ReviewViewModel(processor)
+
+        viewModel.loadSession(
+            listOf(
+                CapturedPageDraft(
+                    originalPath = "files/page-1.jpg",
+                    previewPath = "files/page-1-preview.jpg",
+                    detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                ),
+                CapturedPageDraft(
+                    originalPath = "files/page-2.jpg",
+                    previewPath = "files/page-2-preview.jpg",
+                    detectedCorners = listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)
+                )
+            )
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.selectPage(1)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failedState = viewModel.uiState.value
+        assertEquals(1, failedState.activePageIndex)
+        assertEquals("", failedState.activePage?.processedPath)
+        assertEquals(false, failedState.activePage?.isProcessing)
+        assertEquals("processing failed", failedState.activePage?.errorMessage)
+        assertEquals("files/page-1.jpg-document.jpg", failedState.pages[0].processedPath)
+        assertNull(failedState.pages[0].errorMessage)
     }
 }

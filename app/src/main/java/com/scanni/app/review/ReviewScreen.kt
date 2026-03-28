@@ -13,15 +13,18 @@ import com.scanni.app.processing.EnhancementMode
 
 @Composable
 fun ReviewScreen(
-    state: PageReviewState,
+    state: ReviewUiState,
     onModeChange: (EnhancementMode) -> Unit,
     onAddAnotherPageClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
+    val activePage = state.activePage
     Column(modifier = Modifier.testTag("review-screen")) {
-        Text(text = "Mode: ${state.mode.name}")
-        Text(text = "Original: ${state.originalPath}")
-        Text(text = "Processed: ${state.processedPath}")
+        Text(text = "Pages: ${state.pages.size}")
+        Text(text = "Active Page: ${state.activePageIndex + 1}")
+        Text(text = "Mode: ${activePage?.mode?.name ?: "NONE"}")
+        Text(text = "Original: ${activePage?.originalPath ?: ""}")
+        Text(text = "Processed: ${activePage?.processedPath ?: ""}")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { onModeChange(EnhancementMode.DOCUMENT) }) {
                 Text(text = "Document")
@@ -38,14 +41,14 @@ fun ReviewScreen(
         }
         Button(
             onClick = onSaveClick,
-            enabled = state.processedPath.isNotBlank() && !state.isProcessing
+            enabled = activePage != null && activePage.processedPath.isNotBlank() && !activePage.isProcessing
         ) {
             Text(text = "Save Document")
         }
-        if (state.isProcessing) {
+        if (activePage?.isProcessing == true) {
             Text(text = "Processing...")
         }
-        state.errorMessage?.let { errorMessage ->
+        activePage?.errorMessage?.let { errorMessage ->
             Text(text = "Error: $errorMessage")
         }
     }
