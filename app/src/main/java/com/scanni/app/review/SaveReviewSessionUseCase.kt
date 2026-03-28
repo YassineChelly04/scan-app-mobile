@@ -1,7 +1,5 @@
 package com.scanni.app.review
 
-import com.scanni.app.camera.CapturedPageDraft
-import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.PageProcessor
 
 class SaveReviewSessionUseCase(
@@ -11,14 +9,13 @@ class SaveReviewSessionUseCase(
     suspend operator fun invoke(
         title: String,
         folderId: Long?,
-        pages: List<CapturedPageDraft>,
-        mode: EnhancementMode
+        pages: List<ReviewPageState>
     ): Long {
         val processedPages = pages.map { page ->
             processor.process(
                 originalPath = page.originalPath,
-                mode = mode,
-                corners = page.detectedCorners
+                mode = page.mode,
+                corners = page.corners
             )
         }
         return saveReviewedDocument(title, folderId, processedPages)

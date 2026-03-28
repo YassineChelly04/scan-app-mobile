@@ -49,6 +49,9 @@ class ScanToLibraryFlowTest {
 
         composeRule.onNodeWithText("Capture Sample").performClick()
         composeRule.onNodeWithTag("review-screen").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-page-button-0").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-page-button-1").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-page-button-1").performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
             try {
                 composeRule.onNodeWithText("Save Document").assertIsEnabled()

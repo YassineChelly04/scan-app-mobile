@@ -1,6 +1,5 @@
 package com.scanni.app.review
 
-import com.scanni.app.camera.CapturedPageDraft
 import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.PageProcessor
 import kotlinx.coroutines.test.runTest
@@ -9,7 +8,7 @@ import org.junit.Test
 
 class SaveReviewSessionUseCaseTest {
     @Test
-    fun save_processesEachCapturedPageAndPersistsOrderedResults() = runTest {
+    fun save_usesReviewedPageStateForCornersAndMode() = runTest {
         val processedRequests = mutableListOf<Triple<String, EnhancementMode, List<Float>>>()
         var savedTitle: String? = null
         var savedFolderId: Long? = null
@@ -37,18 +36,19 @@ class SaveReviewSessionUseCaseTest {
             title = "Semester Notes",
             folderId = 7L,
             pages = listOf(
-                CapturedPageDraft(
+                ReviewPageState(
                     originalPath = "files/page-1.jpg",
-                    previewPath = "files/page-1-preview.jpg",
-                    detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                    corners = listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f),
+                    mode = EnhancementMode.BOOK,
+                    processedPath = "ignored"
                 ),
-                CapturedPageDraft(
+                ReviewPageState(
                     originalPath = "files/page-2.jpg",
-                    previewPath = "files/page-2-preview.jpg",
-                    detectedCorners = listOf(10f, 10f, 11f, 10f, 11f, 11f, 10f, 11f)
+                    corners = listOf(0.15f, 0.1f, 0.85f, 0.1f, 0.85f, 0.9f, 0.15f, 0.9f),
+                    mode = EnhancementMode.WHITEBOARD,
+                    processedPath = "ignored"
                 )
-            ),
-            mode = EnhancementMode.BOOK
+            )
         )
 
         assertEquals(81L, result)
@@ -57,14 +57,22 @@ class SaveReviewSessionUseCaseTest {
         assertEquals(
             listOf(
                 "files/page-1.jpg-book.jpg",
-                "files/page-2.jpg-book.jpg"
+                "files/page-2.jpg-whiteboard.jpg"
             ),
             savedPaths
         )
         assertEquals(
             listOf(
-                Triple("files/page-1.jpg", EnhancementMode.BOOK, listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)),
-                Triple("files/page-2.jpg", EnhancementMode.BOOK, listOf(10f, 10f, 11f, 10f, 11f, 11f, 10f, 11f))
+                Triple(
+                    "files/page-1.jpg",
+                    EnhancementMode.BOOK,
+                    listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f)
+                ),
+                Triple(
+                    "files/page-2.jpg",
+                    EnhancementMode.WHITEBOARD,
+                    listOf(0.15f, 0.1f, 0.85f, 0.1f, 0.85f, 0.9f, 0.15f, 0.9f)
+                )
             ),
             processedRequests
         )

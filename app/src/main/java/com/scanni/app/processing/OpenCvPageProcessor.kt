@@ -3,6 +3,7 @@ package com.scanni.app.processing
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import com.scanni.app.review.ReviewCropMath
 import java.io.File
 
 class OpenCvPageProcessor : PageProcessor {
@@ -17,12 +18,13 @@ class OpenCvPageProcessor : PageProcessor {
         val outputFile = File(outputPath).apply {
             parentFile?.mkdirs()
         }
-        val processed = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
+        val warped = cropAndWarp(source, corners)
+        val processed = Bitmap.createBitmap(warped.width, warped.height, Bitmap.Config.ARGB_8888)
 
         try {
-            for (x in 0 until source.width) {
-                for (y in 0 until source.height) {
-                    processed.setPixel(x, y, transformPixel(source.getPixel(x, y), mode))
+            for (x in 0 until warped.width) {
+                for (y in 0 until warped.height) {
+                    processed.setPixel(x, y, transformPixel(warped.getPixel(x, y), mode))
                 }
             }
 
@@ -32,7 +34,42 @@ class OpenCvPageProcessor : PageProcessor {
             return outputFile.absolutePath
         } finally {
             source.recycle()
+            warped.recycle()
             processed.recycle()
+        }
+    }
+
+    private fun cropAndWarp(source: Bitmap, corners: List<Float>): Bitmap {
+        val mapping = ReviewCropMath.buildCropMapping(
+            imageWidth = source.width,
+            imageHeight = source.height,
+            corners = corners
+        )
+        val transform = ReviewCropMath.buildHomography(
+            mapping.destinationPoints,
+            mapping.sourcePoints
+        )
+
+        return Bitmap.createBitmap(
+            mapping.outputWidth,
+            mapping.outputHeight,
+            Bitmap.Config.ARGB_8888
+        ).also { destination ->
+            for (x in 0 until destination.width) {
+                for (y in 0 until destination.height) {
+                    val denominator = transform[6] * x + transform[7] * y + transform[8]
+                    if (denominator == 0f) {
+                        destination.setPixel(x, y, Color.WHITE)
+                        continue
+                    }
+
+                    val sourceX = ((transform[0] * x) + (transform[1] * y) + transform[2]) / denominator
+                    val sourceY = ((transform[3] * x) + (transform[4] * y) + transform[5]) / denominator
+                    val clampedX = sourceX.toInt().coerceIn(0, source.width - 1)
+                    val clampedY = sourceY.toInt().coerceIn(0, source.height - 1)
+                    destination.setPixel(x, y, source.getPixel(clampedX, clampedY))
+                }
+            }
         }
     }
 

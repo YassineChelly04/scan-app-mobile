@@ -38,7 +38,6 @@ import com.scanni.app.export.ShareDocumentUseCase
 import com.scanni.app.library.LibraryScreen
 import com.scanni.app.library.LibraryViewModel
 import com.scanni.app.navigation.AppRoute
-import com.scanni.app.processing.EnhancementMode
 import com.scanni.app.processing.OpenCvPageProcessor
 import com.scanni.app.review.ReviewScreen
 import com.scanni.app.review.SaveReviewedDocumentUseCase
@@ -150,36 +149,33 @@ fun ScanniApp() {
                     saveReviewedDocument = saveReviewedDocument::invoke
                 )
             }
-            val draft = scannerState.pages.lastOrNull()
             val reviewViewModel: ReviewViewModel = viewModel(
                 factory = ReviewViewModel.factory(OpenCvPageProcessor())
             )
             val state by reviewViewModel.uiState.collectAsStateWithLifecycle()
 
-            LaunchedEffect(draft?.originalPath) {
-                draft?.let {
-                    reviewViewModel.loadDraft(
-                        originalPath = it.originalPath,
-                        corners = it.detectedCorners
-                    )
-                    reviewViewModel.changeMode(EnhancementMode.DOCUMENT)
+            LaunchedEffect(scannerState.pages.map { it.originalPath }) {
+                if (scannerState.pages.isNotEmpty()) {
+                    reviewViewModel.loadSession(scannerState.pages)
                 }
             }
 
             ReviewScreen(
                 state = state,
+                onPageSelected = reviewViewModel::selectPage,
                 onModeChange = reviewViewModel::changeMode,
+                onCropChanged = reviewViewModel::updateActiveCorners,
+                onCropChangeFinished = reviewViewModel::confirmActiveCrop,
                 onAddAnotherPageClick = {
                     navController.popBackStack()
                 },
                 onSaveClick = {
-                    if (state.processedPath.isBlank() || scannerState.pages.isEmpty()) return@ReviewScreen
+                    if (state.activePage?.processedPath.isNullOrBlank() || scannerState.pages.isEmpty()) return@ReviewScreen
                     coroutineScope.launch {
                         saveReviewSession(
                             title = "Quick Scan",
                             folderId = null,
-                            pages = scannerState.pages,
-                            mode = state.mode
+                            pages = state.pages
                         )
                         withContext(Dispatchers.Main.immediate) {
                             scannerViewModel.clearSession()
