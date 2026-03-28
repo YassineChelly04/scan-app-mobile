@@ -18,7 +18,8 @@ class SaveReviewSessionUseCaseTest {
                 override suspend fun process(
                     originalPath: String,
                     mode: EnhancementMode,
-                    corners: List<Float>
+                    corners: List<Float>,
+                    rotationQuarterTurns: Int
                 ): String {
                     processedRequests += Triple(originalPath, mode, corners)
                     return "$originalPath-${mode.name.lowercase()}.jpg"

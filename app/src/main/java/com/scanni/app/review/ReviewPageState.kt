@@ -6,6 +6,7 @@ data class ReviewPageState(
     val originalPath: String,
     val corners: List<Float>,
     val mode: EnhancementMode = EnhancementMode.DOCUMENT,
+    val rotationQuarterTurns: Int = 0,
     val processedPath: String = "",
     val isProcessing: Boolean = false,
     val errorMessage: String? = null

@@ -22,7 +22,8 @@ class ProcessingGoldenTest {
         val outputPath = processor.process(
             originalPath = source.absolutePath,
             mode = EnhancementMode.DOCUMENT,
-            corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+            corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f),
+            rotationQuarterTurns = 0
         )
 
         assertNotEquals(source.absolutePath, outputPath)
@@ -38,14 +39,16 @@ class ProcessingGoldenTest {
             processor.process(
                 originalPath = source.absolutePath,
                 mode = EnhancementMode.DOCUMENT,
-                corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f),
+                rotationQuarterTurns = 0
             )
         )
         val innerCropOutput = BitmapFactory.decodeFile(
             processor.process(
                 originalPath = source.absolutePath,
                 mode = EnhancementMode.DOCUMENT,
-                corners = listOf(0.2f, 0.1f, 0.8f, 0.1f, 0.75f, 0.9f, 0.25f, 0.9f)
+                corners = listOf(0.2f, 0.1f, 0.8f, 0.1f, 0.75f, 0.9f, 0.25f, 0.9f),
+                rotationQuarterTurns = 0
             )
         )
 
@@ -59,7 +62,8 @@ class ProcessingGoldenTest {
             OpenCvPageProcessor().process(
                 originalPath = createSampleImage().absolutePath,
                 mode = EnhancementMode.DOCUMENT,
-                corners = listOf(0f, 0f, 1f, 0f)
+                corners = listOf(0f, 0f, 1f, 0f),
+                rotationQuarterTurns = 0
             )
             fail("Expected invalid corner input to throw")
         } catch (_: IllegalArgumentException) {

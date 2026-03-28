@@ -37,7 +37,8 @@ class ReviewViewModelTest {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
-                corners: List<Float>
+                corners: List<Float>,
+                rotationQuarterTurns: Int
             ): String {
                 requests += Triple(originalPath, mode, corners)
                 return "$originalPath-${mode.name.lowercase()}.jpg"
@@ -94,7 +95,8 @@ class ReviewViewModelTest {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
-                corners: List<Float>
+                corners: List<Float>,
+                rotationQuarterTurns: Int
             ): String {
                 requests += Triple(originalPath, mode, corners)
                 return "$originalPath-${mode.name.lowercase()}.jpg"
@@ -152,7 +154,8 @@ class ReviewViewModelTest {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
-                corners: List<Float>
+                corners: List<Float>,
+                rotationQuarterTurns: Int
             ): String {
                 requests += Triple(originalPath, mode, corners)
                 return "$originalPath-${mode.name.lowercase()}.jpg"
@@ -198,7 +201,8 @@ class ReviewViewModelTest {
             override suspend fun process(
                 originalPath: String,
                 mode: EnhancementMode,
-                corners: List<Float>
+                corners: List<Float>,
+                rotationQuarterTurns: Int
             ): String {
                 if (originalPath.contains("page-2")) {
                     throw IllegalStateException("processing failed")
@@ -235,4 +239,120 @@ class ReviewViewModelTest {
         assertEquals("files/page-1.jpg-document.jpg", failedState.pages[0].processedPath)
         assertNull(failedState.pages[0].errorMessage)
     }
+
+    @Test
+    fun rotateActivePage_updatesRotationAndReprocessesOnlyThatPage() = runTest {
+        val requests = mutableListOf<ProcessRequest>()
+        val processor = object : PageProcessor {
+            override suspend fun process(
+                originalPath: String,
+                mode: EnhancementMode,
+                corners: List<Float>,
+                rotationQuarterTurns: Int
+            ): String {
+                requests += ProcessRequest(originalPath, mode, corners, rotationQuarterTurns)
+                return "$originalPath-$rotationQuarterTurns.jpg"
+            }
+        }
+        val viewModel = ReviewViewModel(processor)
+
+        viewModel.loadSession(sampleDrafts())
+        dispatcher.scheduler.advanceUntilIdle()
+        requests.clear()
+
+        viewModel.rotateActivePage(clockwise = true)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val activePage = viewModel.uiState.value.activePage!!
+        assertEquals(1, activePage.rotationQuarterTurns)
+        assertEquals("files/page-1.jpg-1.jpg", activePage.processedPath)
+        assertEquals(
+            listOf(
+                ProcessRequest(
+                    originalPath = "files/page-1.jpg",
+                    mode = EnhancementMode.DOCUMENT,
+                    corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f),
+                    rotationQuarterTurns = 1
+                )
+            ),
+            requests
+        )
+    }
+
+    @Test
+    fun deleteActivePage_removesItAndRepairsActiveIndex() = runTest {
+        val viewModel = ReviewViewModel(successfulProcessor())
+
+        viewModel.loadSession(sampleDrafts())
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.selectPage(1)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.deleteActivePage()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.pages.size)
+        assertEquals("files/page-1.jpg", state.activePage?.originalPath)
+        assertEquals(0, state.activePageIndex)
+    }
+
+    @Test
+    fun deleteActivePage_ignoresSingleRemainingPage() = runTest {
+        val viewModel = ReviewViewModel(successfulProcessor())
+
+        viewModel.loadSession(listOf(sampleDrafts().first()))
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.deleteActivePage()
+
+        assertEquals(1, viewModel.uiState.value.pages.size)
+    }
+
+    @Test
+    fun movePage_reordersPagesAndPreservesPageState() = runTest {
+        val viewModel = ReviewViewModel(successfulProcessor())
+
+        viewModel.loadSession(sampleDrafts())
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.rotateActivePage(clockwise = true)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.movePage(fromIndex = 0, toIndex = 1)
+
+        val state = viewModel.uiState.value
+        assertEquals("files/page-2.jpg", state.pages[0].originalPath)
+        assertEquals("files/page-1.jpg", state.pages[1].originalPath)
+        assertEquals(1, state.pages[1].rotationQuarterTurns)
+        assertEquals(1, state.activePageIndex)
+    }
+
+    private fun sampleDrafts(): List<CapturedPageDraft> =
+        listOf(
+            CapturedPageDraft(
+                originalPath = "files/page-1.jpg",
+                previewPath = "files/page-1-preview.jpg",
+                detectedCorners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+            ),
+            CapturedPageDraft(
+                originalPath = "files/page-2.jpg",
+                previewPath = "files/page-2-preview.jpg",
+                detectedCorners = listOf(0.1f, 0.1f, 0.9f, 0.1f, 0.9f, 0.9f, 0.1f, 0.9f)
+            )
+        )
+
+    private fun successfulProcessor(): PageProcessor =
+        object : PageProcessor {
+            override suspend fun process(
+                originalPath: String,
+                mode: EnhancementMode,
+                corners: List<Float>,
+                rotationQuarterTurns: Int
+            ): String = "$originalPath-${mode.name.lowercase()}-$rotationQuarterTurns.jpg"
+        }
+
+    private data class ProcessRequest(
+        val originalPath: String,
+        val mode: EnhancementMode,
+        val corners: List<Float>,
+        val rotationQuarterTurns: Int
+    )
 }

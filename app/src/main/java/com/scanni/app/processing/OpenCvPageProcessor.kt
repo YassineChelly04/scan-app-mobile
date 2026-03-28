@@ -10,7 +10,8 @@ class OpenCvPageProcessor : PageProcessor {
     override suspend fun process(
         originalPath: String,
         mode: EnhancementMode,
-        corners: List<Float>
+        corners: List<Float>,
+        rotationQuarterTurns: Int
     ): String {
         val source = BitmapFactory.decodeFile(originalPath)
             ?: throw IllegalArgumentException("Unable to load image at $originalPath")
@@ -18,7 +19,7 @@ class OpenCvPageProcessor : PageProcessor {
         val outputFile = File(outputPath).apply {
             parentFile?.mkdirs()
         }
-        val warped = cropAndWarp(source, corners)
+        val warped = rotateBitmap(cropAndWarp(source, corners), rotationQuarterTurns)
         val processed = Bitmap.createBitmap(warped.width, warped.height, Bitmap.Config.ARGB_8888)
 
         try {
@@ -69,6 +70,38 @@ class OpenCvPageProcessor : PageProcessor {
                     val clampedY = sourceY.toInt().coerceIn(0, source.height - 1)
                     destination.setPixel(x, y, source.getPixel(clampedX, clampedY))
                 }
+            }
+        }
+    }
+
+    private fun rotateBitmap(source: Bitmap, rotationQuarterTurns: Int): Bitmap {
+        return when (((rotationQuarterTurns % 4) + 4) % 4) {
+            0 -> source
+            1 -> Bitmap.createBitmap(source.height, source.width, Bitmap.Config.ARGB_8888).also { rotated ->
+                for (x in 0 until source.width) {
+                    for (y in 0 until source.height) {
+                        rotated.setPixel(source.height - 1 - y, x, source.getPixel(x, y))
+                    }
+                }
+                source.recycle()
+            }
+
+            2 -> Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888).also { rotated ->
+                for (x in 0 until source.width) {
+                    for (y in 0 until source.height) {
+                        rotated.setPixel(source.width - 1 - x, source.height - 1 - y, source.getPixel(x, y))
+                    }
+                }
+                source.recycle()
+            }
+
+            else -> Bitmap.createBitmap(source.height, source.width, Bitmap.Config.ARGB_8888).also { rotated ->
+                for (x in 0 until source.width) {
+                    for (y in 0 until source.height) {
+                        rotated.setPixel(y, source.width - 1 - x, source.getPixel(x, y))
+                    }
+                }
+                source.recycle()
             }
         }
     }

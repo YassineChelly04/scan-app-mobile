@@ -89,10 +89,65 @@ class ReviewViewModel(
         )
     }
 
+    fun rotateActivePage(clockwise: Boolean) {
+        val activeIndex = _uiState.value.activePageIndex
+        val activePage = _uiState.value.activePage ?: return
+        val nextRotation = (activePage.rotationQuarterTurns + if (clockwise) 1 else 3) % 4
+
+        updatePage(activeIndex) { page ->
+            page.copy(
+                rotationQuarterTurns = nextRotation,
+                processedPath = "",
+                errorMessage = null
+            )
+        }
+        processPage(index = activeIndex, rotationQuarterTurns = nextRotation)
+    }
+
+    fun deleteActivePage() {
+        _uiState.update { state ->
+            if (state.pages.size <= 1) {
+                return@update state
+            }
+
+            val pages = state.pages.toMutableList()
+            pages.removeAt(state.activePageIndex)
+            state.copy(
+                pages = pages,
+                activePageIndex = state.activePageIndex.coerceAtMost(pages.lastIndex)
+            )
+        }
+    }
+
+    fun movePage(fromIndex: Int, toIndex: Int) {
+        _uiState.update { state ->
+            if (fromIndex !in state.pages.indices || toIndex !in state.pages.indices || fromIndex == toIndex) {
+                return@update state
+            }
+
+            val pages = state.pages.toMutableList()
+            val movedPage = pages.removeAt(fromIndex)
+            pages.add(toIndex, movedPage)
+            val nextActiveIndex = when (state.activePageIndex) {
+                fromIndex -> toIndex
+                in minOf(fromIndex, toIndex)..maxOf(fromIndex, toIndex) -> {
+                    if (fromIndex < toIndex) state.activePageIndex - 1 else state.activePageIndex + 1
+                }
+                else -> state.activePageIndex
+            }
+
+            state.copy(
+                pages = pages,
+                activePageIndex = nextActiveIndex
+            )
+        }
+    }
+
     private fun processPage(
         index: Int,
         mode: EnhancementMode? = null,
         corners: List<Float>? = null,
+        rotationQuarterTurns: Int? = null,
         skipLoadingUpdate: Boolean = false
     ) {
         val currentPage = _uiState.value.pages.getOrNull(index) ?: return
@@ -101,6 +156,7 @@ class ReviewViewModel(
         }
         val nextMode = mode ?: currentPage.mode
         val nextCorners = corners ?: currentPage.corners
+        val nextRotation = rotationQuarterTurns ?: currentPage.rotationQuarterTurns
 
         processingJob?.cancel()
         activeRequestId += 1
@@ -120,7 +176,8 @@ class ReviewViewModel(
                 val processedPath = processor.process(
                     originalPath = currentPage.originalPath,
                     mode = nextMode,
-                    corners = nextCorners
+                    corners = nextCorners,
+                    rotationQuarterTurns = nextRotation
                 )
 
                 if (requestId != activeRequestId) {

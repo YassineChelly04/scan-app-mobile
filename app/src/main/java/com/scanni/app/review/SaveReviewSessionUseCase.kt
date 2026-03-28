@@ -15,7 +15,8 @@ class SaveReviewSessionUseCase(
             processor.process(
                 originalPath = page.originalPath,
                 mode = page.mode,
-                corners = page.corners
+                corners = page.corners,
+                rotationQuarterTurns = page.rotationQuarterTurns
             )
         }
         return saveReviewedDocument(title, folderId, processedPages)

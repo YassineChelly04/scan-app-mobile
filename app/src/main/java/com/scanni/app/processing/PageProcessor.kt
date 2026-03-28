@@ -4,6 +4,7 @@ interface PageProcessor {
     suspend fun process(
         originalPath: String,
         mode: EnhancementMode,
-        corners: List<Float>
+        corners: List<Float>,
+        rotationQuarterTurns: Int
     ): String
 }
