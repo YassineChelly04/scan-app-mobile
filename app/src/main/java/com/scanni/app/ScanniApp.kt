@@ -149,21 +149,23 @@ fun ScanniApp() {
                     saveReviewedDocument = saveReviewedDocument::invoke
                 )
             }
-            val draft = scannerState.pages.lastOrNull()
             val reviewViewModel: ReviewViewModel = viewModel(
                 factory = ReviewViewModel.factory(OpenCvPageProcessor())
             )
             val state by reviewViewModel.uiState.collectAsStateWithLifecycle()
 
-            LaunchedEffect(draft?.originalPath) {
-                draft?.let {
-                    reviewViewModel.loadSession(listOf(it))
+            LaunchedEffect(scannerState.pages.map { it.originalPath }) {
+                if (scannerState.pages.isNotEmpty()) {
+                    reviewViewModel.loadSession(scannerState.pages)
                 }
             }
 
             ReviewScreen(
                 state = state,
+                onPageSelected = reviewViewModel::selectPage,
                 onModeChange = reviewViewModel::changeMode,
+                onCropChanged = reviewViewModel::updateActiveCorners,
+                onCropChangeFinished = reviewViewModel::confirmActiveCrop,
                 onAddAnotherPageClick = {
                     navController.popBackStack()
                 },
