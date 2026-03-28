@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.geometry.Offset
 import com.scanni.app.MainActivity
 import org.junit.Rule
 import org.junit.Test
@@ -49,17 +51,16 @@ class ScanToLibraryFlowTest {
 
         composeRule.onNodeWithText("Capture Sample").performClick()
         composeRule.onNodeWithTag("review-screen").assertIsDisplayed()
-        composeRule.onNodeWithTag("review-page-button-0").assertIsDisplayed()
-        composeRule.onNodeWithTag("review-page-button-1").assertIsDisplayed()
-        composeRule.onNodeWithTag("review-page-button-1").performClick()
-        composeRule.waitUntil(timeoutMillis = 10_000) {
-            try {
-                composeRule.onNodeWithText("Save Document").assertIsEnabled()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        composeRule.onNodeWithTag("review-page-card-0").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-page-card-1").assertIsDisplayed()
+        composeRule.onNodeWithTag("review-page-card-1").performTouchInput {
+            down(center)
+            moveBy(Offset(-250f, 0f))
+            up()
         }
+        composeRule.onNodeWithTag("review-page-card-0").performClick()
+        composeRule.onNodeWithTag("review-delete-page").performClick()
+        waitForSaveEnabled()
 
         composeRule.onNodeWithText("Save Document").performClick()
         composeRule.waitUntil(timeoutMillis = 10_000) {
@@ -73,6 +74,17 @@ class ScanToLibraryFlowTest {
 
         composeRule.onAllNodesWithText("Quick Scan")[0].performClick()
         composeRule.onNodeWithTag("document-detail-screen").assertIsDisplayed()
-        composeRule.onNodeWithText("Pages: 2").assertIsDisplayed()
+        composeRule.onNodeWithText("Pages: 1").assertIsDisplayed()
+    }
+
+    private fun waitForSaveEnabled() {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            try {
+                composeRule.onNodeWithText("Save Document").assertIsEnabled()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
     }
 }

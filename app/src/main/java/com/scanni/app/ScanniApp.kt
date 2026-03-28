@@ -166,6 +166,10 @@ fun ScanniApp() {
                 onModeChange = reviewViewModel::changeMode,
                 onCropChanged = reviewViewModel::updateActiveCorners,
                 onCropChangeFinished = reviewViewModel::confirmActiveCrop,
+                onRotateLeft = { reviewViewModel.rotateActivePage(clockwise = false) },
+                onRotateRight = { reviewViewModel.rotateActivePage(clockwise = true) },
+                onDeletePage = reviewViewModel::deleteActivePage,
+                onMovePage = reviewViewModel::movePage,
                 onAddAnotherPageClick = {
                     navController.popBackStack()
                 },
