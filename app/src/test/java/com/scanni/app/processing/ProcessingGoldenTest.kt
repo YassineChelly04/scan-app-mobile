@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import java.io.File
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -70,19 +71,46 @@ class ProcessingGoldenTest {
         }
     }
 
+    @Test
+    fun process_rotationChangesOutputOrientation() = runBlocking {
+        val source = createSampleImage()
+        val processor = OpenCvPageProcessor()
+
+        val unrotated = BitmapFactory.decodeFile(
+            processor.process(
+                originalPath = source.absolutePath,
+                mode = EnhancementMode.DOCUMENT,
+                corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f),
+                rotationQuarterTurns = 0
+            )
+        )
+        val rotated = BitmapFactory.decodeFile(
+            processor.process(
+                originalPath = source.absolutePath,
+                mode = EnhancementMode.DOCUMENT,
+                corners = listOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f),
+                rotationQuarterTurns = 1
+            )
+        )
+
+        assertTrue(unrotated.width > unrotated.height)
+        assertEquals(unrotated.width, rotated.height)
+        assertEquals(unrotated.height, rotated.width)
+    }
+
     private fun createSampleImage(): File {
         val file = File("build/test-output/processing/source.jpg").apply {
             parentFile?.mkdirs()
         }
-        Bitmap.createBitmap(80, 100, Bitmap.Config.ARGB_8888).apply {
+        Bitmap.createBitmap(120, 80, Bitmap.Config.ARGB_8888).apply {
             eraseColor(Color.rgb(215, 190, 150))
-            for (x in 10 until 70) {
-                for (y in 15 until 85) {
+            for (x in 15 until 105) {
+                for (y in 10 until 70) {
                     setPixel(x, y, Color.rgb(30, 30, 30))
                 }
             }
-            for (x in 20 until 60) {
-                setPixel(x, 50, Color.rgb(250, 250, 250))
+            for (x in 30 until 90) {
+                setPixel(x, 40, Color.rgb(250, 250, 250))
             }
             file.outputStream().use { stream ->
                 compress(Bitmap.CompressFormat.JPEG, 100, stream)

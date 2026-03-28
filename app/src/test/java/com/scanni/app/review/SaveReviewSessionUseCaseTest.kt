@@ -8,8 +8,8 @@ import org.junit.Test
 
 class SaveReviewSessionUseCaseTest {
     @Test
-    fun save_usesReviewedPageStateForCornersAndMode() = runTest {
-        val processedRequests = mutableListOf<Triple<String, EnhancementMode, List<Float>>>()
+    fun save_usesReviewedPageStateForCornersModeRotationAndOrder() = runTest {
+        val processedRequests = mutableListOf<ProcessRequest>()
         var savedTitle: String? = null
         var savedFolderId: Long? = null
         var savedPaths: List<String> = emptyList()
@@ -21,8 +21,8 @@ class SaveReviewSessionUseCaseTest {
                     corners: List<Float>,
                     rotationQuarterTurns: Int
                 ): String {
-                    processedRequests += Triple(originalPath, mode, corners)
-                    return "$originalPath-${mode.name.lowercase()}.jpg"
+                    processedRequests += ProcessRequest(originalPath, mode, corners, rotationQuarterTurns)
+                    return "$originalPath-${mode.name.lowercase()}-$rotationQuarterTurns.jpg"
                 }
             },
             saveReviewedDocument = { title, folderId, pageImageUris ->
@@ -38,15 +38,17 @@ class SaveReviewSessionUseCaseTest {
             folderId = 7L,
             pages = listOf(
                 ReviewPageState(
-                    originalPath = "files/page-1.jpg",
-                    corners = listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f),
-                    mode = EnhancementMode.BOOK,
-                    processedPath = "ignored"
-                ),
-                ReviewPageState(
                     originalPath = "files/page-2.jpg",
                     corners = listOf(0.15f, 0.1f, 0.85f, 0.1f, 0.85f, 0.9f, 0.15f, 0.9f),
                     mode = EnhancementMode.WHITEBOARD,
+                    rotationQuarterTurns = 3,
+                    processedPath = "ignored"
+                ),
+                ReviewPageState(
+                    originalPath = "files/page-1.jpg",
+                    corners = listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f),
+                    mode = EnhancementMode.BOOK,
+                    rotationQuarterTurns = 1,
                     processedPath = "ignored"
                 )
             )
@@ -57,25 +59,34 @@ class SaveReviewSessionUseCaseTest {
         assertEquals(7L, savedFolderId)
         assertEquals(
             listOf(
-                "files/page-1.jpg-book.jpg",
-                "files/page-2.jpg-whiteboard.jpg"
+                "files/page-2.jpg-whiteboard-3.jpg",
+                "files/page-1.jpg-book-1.jpg"
             ),
             savedPaths
         )
         assertEquals(
             listOf(
-                Triple(
-                    "files/page-1.jpg",
-                    EnhancementMode.BOOK,
-                    listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f)
+                ProcessRequest(
+                    originalPath = "files/page-2.jpg",
+                    mode = EnhancementMode.WHITEBOARD,
+                    corners = listOf(0.15f, 0.1f, 0.85f, 0.1f, 0.85f, 0.9f, 0.15f, 0.9f),
+                    rotationQuarterTurns = 3
                 ),
-                Triple(
-                    "files/page-2.jpg",
-                    EnhancementMode.WHITEBOARD,
-                    listOf(0.15f, 0.1f, 0.85f, 0.1f, 0.85f, 0.9f, 0.15f, 0.9f)
+                ProcessRequest(
+                    originalPath = "files/page-1.jpg",
+                    mode = EnhancementMode.BOOK,
+                    corners = listOf(0.05f, 0.05f, 0.95f, 0.05f, 0.95f, 0.95f, 0.05f, 0.95f),
+                    rotationQuarterTurns = 1
                 )
             ),
             processedRequests
         )
     }
+
+    private data class ProcessRequest(
+        val originalPath: String,
+        val mode: EnhancementMode,
+        val corners: List<Float>,
+        val rotationQuarterTurns: Int
+    )
 }
