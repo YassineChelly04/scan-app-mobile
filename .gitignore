@@ -1,8 +1,11 @@
-.worktrees/
+*.iml
 .gradle/
 .idea/
-*.iml
-local.properties
+.kotlin/
+.worktrees/
 build/
-app/build/
 captures/
+local.properties
+*.keystore
+*.jks
+.DS_Store
