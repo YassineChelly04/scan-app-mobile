@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">سكاني</string>
+
+    <!-- Common -->
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_create">إنشاء</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_done">تم</string>
+    <string name="action_rename">إعادة تسمية</string>
+    <string name="action_retry">إعادة المحاولة</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_share">مشاركة</string>
+    <string name="cd_back">رجوع</string>
+    <string name="cd_close">إغلاق</string>
+    <string name="cd_more_options">خيارات إضافية</string>
+    <string name="processing">جارٍ المعالجة…</string>
+
+    <!-- Library -->
+    <string name="library_search_hint">ابحث في المستندات والنصوص</string>
+    <string name="library_empty_title">لا توجد مستندات بعد</string>
+    <string name="library_empty_body">وجّه الكاميرا نحو مستند وسيتعرّف سكاني على حوافه ويقصّه ويجعل نصّه قابلاً للبحث.</string>
+    <string name="library_no_results">لا توجد مستندات تطابق «%1$s»</string>
+    <string name="library_scan">مسح</string>
+    <string name="library_selected_count">تم تحديد %1$d</string>
+    <string name="library_settings">الإعدادات</string>
+    <plurals name="library_page_count">
+        <item quantity="zero">%1$d صفحات</item>
+        <item quantity="one">صفحة واحدة</item>
+        <item quantity="two">صفحتان</item>
+        <item quantity="few">%1$d صفحات</item>
+        <item quantity="many">%1$d صفحة</item>
+        <item quantity="other">%1$d صفحة</item>
+    </plurals>
+
+    <!-- Folders -->
+    <string name="folder_all_documents">الكل</string>
+    <string name="folder_new">مجلد جديد</string>
+    <string name="folder_name_hint">اسم المجلد</string>
+    <string name="folder_none">بدون مجلد</string>
+    <string name="folder_delete_message">هل تريد حذف «%1$s»؟ ستُحفظ المستندات الموجودة بداخله وتُنقل خارج المجلد.</string>
+    <string name="folder_move_title">نقل إلى مجلد</string>
+
+    <!-- Delete documents -->
+    <plurals name="delete_documents_message">
+        <item quantity="one">هل تريد حذف هذا المستند؟ ستُحذف صفحاته ونصوصه نهائيًا.</item>
+        <item quantity="other">هل تريد حذف %1$d من المستندات؟ ستُحذف صفحاتها ونصوصها نهائيًا.</item>
+    </plurals>
+
+    <!-- Scanner -->
+    <string name="scanner_permission_title">مطلوب إذن الكاميرا</string>
+    <string name="scanner_permission_body">يستخدم سكاني الكاميرا لاكتشاف المستندات والتقاطها. لا يغادر أي شيء جهازك.</string>
+    <string name="scanner_permission_grant">السماح بالكاميرا</string>
+    <string name="scanner_hint_searching">جارٍ البحث عن مستند…</string>
+    <string name="scanner_hint_hold_steady">حافظ على ثبات الكاميرا</string>
+    <string name="scanner_hint_captured">تم الالتقاط</string>
+    <string name="scanner_mode_document">مستند</string>
+    <string name="scanner_mode_whiteboard">سبورة</string>
+    <string name="scanner_mode_card">بطاقة</string>
+    <string name="scanner_mode_photo">صورة</string>
+    <string name="scanner_cd_capture">التقاط</string>
+    <string name="scanner_cd_flash_on">إطفاء الفلاش</string>
+    <string name="scanner_cd_flash_off">تشغيل الفلاش</string>
+    <string name="scanner_cd_gallery">استيراد من المعرض</string>
+    <string name="scanner_cd_review_pages">مراجعة الصفحات الملتقطة</string>
+    <string name="scanner_import_failed">تعذّر استيراد هذه الصورة</string>
+
+    <!-- Review -->
+    <string name="review_title">مراجعة</string>
+    <string name="review_page_indicator">%1$d / %2$d</string>
+    <string name="review_action_add_page">إضافة صفحة</string>
+    <string name="review_action_crop">قص</string>
+    <string name="review_action_rotate">تدوير</string>
+    <string name="review_delete_page_message">هل تريد إزالة هذه الصفحة من المسح؟</string>
+    <string name="review_discard_title">تجاهل المسح؟</string>
+    <string name="review_discard_body">سيتم التخلص من جميع الصفحات الملتقطة.</string>
+    <string name="review_discard_confirm">تجاهل</string>
+    <string name="review_keep_editing">متابعة التحرير</string>
+    <string name="review_save_dialog_title">حفظ المستند</string>
+    <string name="review_default_name_prefix">مسح</string>
+    <string name="review_document_name_hint">اسم المستند</string>
+    <string name="review_saving">جارٍ الحفظ…</string>
+
+    <!-- Filters -->
+    <string name="filter_original">أصلي</string>
+    <string name="filter_auto">سحري</string>
+    <string name="filter_grayscale">رمادي</string>
+    <string name="filter_bw">أبيض وأسود</string>
+    <string name="filter_whiteboard">سبورة</string>
+    <string name="filter_photo">صورة</string>
+
+    <!-- Crop -->
+    <string name="crop_title">ضبط الزوايا</string>
+    <string name="crop_detect">اكتشاف تلقائي</string>
+    <string name="crop_full_page">الصفحة كاملة</string>
+
+    <!-- Document -->
+    <string name="document_tab_pages">الصفحات</string>
+    <string name="document_tab_text">النص</string>
+    <string name="document_export">تصدير</string>
+    <string name="document_export_pdf">مستند PDF</string>
+    <string name="document_export_pdf_desc">قابل للبحث — النص المتعرَّف عليه مضمَّن</string>
+    <string name="document_export_save_pdf">حفظ PDF على الجهاز</string>
+    <string name="document_export_images">الصفحات كصور</string>
+    <string name="document_export_text">نسخ كل النص</string>
+    <string name="document_text_copied">تم نسخ النص</string>
+    <string name="document_text_pending">جارٍ قراءة النص في صفحاتك…</string>
+    <string name="document_text_failed">فشل التعرّف على النص.</string>
+    <string name="document_text_empty">لم يُعثر على نص في هذه الصفحة.</string>
+    <string name="document_text_rerun">إعادة التعرّف</string>
+    <string name="document_delete_message">هل تريد حذف «%1$s»؟ ستُحذف صفحاته ونصوصه نهائيًا.</string>
+    <string name="document_edit_page">تحرير الصفحة</string>
+    <string name="document_rename_title">إعادة تسمية المستند</string>
+    <string name="document_not_found">هذا المستند لم يعد موجودًا.</string>
+    <string name="document_export_failed">فشل التصدير</string>
+
+    <!-- Edit page -->
+    <string name="edit_page_title">تحرير الصفحة</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_theme">السمة</string>
+    <string name="settings_theme_system">اتباع النظام</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_dynamic_color">الألوان الديناميكية</string>
+    <string name="settings_dynamic_color_desc">استخدام ألوان مستوحاة من الخلفية (أندرويد 12+)</string>
+    <string name="settings_section_scanning">المسح</string>
+    <string name="settings_auto_capture">التقاط تلقائي</string>
+    <string name="settings_auto_capture_desc">التقاط الصورة تلقائيًا عند ثبات المستند</string>
+    <string name="settings_section_ocr">التعرّف على النص</string>
+    <string name="settings_ocr_language">نظام الكتابة</string>
+    <string name="settings_ocr_latin">لاتيني</string>
+    <string name="settings_ocr_latin_desc">الإنجليزية والفرنسية والإسبانية والألمانية وغيرها — على الجهاز</string>
+    <string name="settings_ocr_arabic">العربية</string>
+    <string name="settings_ocr_arabic_desc">مضمّنة وتعمل دون اتصال</string>
+    <string name="settings_section_about">حول</string>
+    <string name="settings_about_version">الإصدار %1$s</string>
+    <string name="settings_about_blurb">يحتفظ سكاني بكل المسوحات على جهازك. لا حسابات ولا سحابة.</string>
+</resources>

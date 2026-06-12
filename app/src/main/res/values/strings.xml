@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Scanni</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_create">Create</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_done">Done</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_save">Save</string>
+    <string name="action_share">Share</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_more_options">More options</string>
+    <string name="processing">Processing…</string>
+
+    <!-- Library -->
+    <string name="library_search_hint">Search documents &amp; text</string>
+    <string name="library_empty_title">Nothing scanned yet</string>
+    <string name="library_empty_body">Point your camera at a document and Scanni will find the edges, crop it and make the text searchable.</string>
+    <string name="library_no_results">No documents match “%1$s”</string>
+    <string name="library_scan">Scan</string>
+    <string name="library_selected_count">%1$d selected</string>
+    <string name="library_settings">Settings</string>
+    <plurals name="library_page_count">
+        <item quantity="one">%1$d page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+
+    <!-- Folders -->
+    <string name="folder_all_documents">All</string>
+    <string name="folder_new">New folder</string>
+    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_none">No folder</string>
+    <string name="folder_delete_message">Delete “%1$s”? Documents inside it are kept and moved out of the folder.</string>
+    <string name="folder_move_title">Move to folder</string>
+
+    <!-- Delete documents -->
+    <plurals name="delete_documents_message">
+        <item quantity="one">Delete this document? Its pages and recognized text are removed permanently.</item>
+        <item quantity="other">Delete %1$d documents? Their pages and recognized text are removed permanently.</item>
+    </plurals>
+
+    <!-- Scanner -->
+    <string name="scanner_permission_title">Camera access needed</string>
+    <string name="scanner_permission_body">Scanni uses the camera to detect and capture documents. Nothing leaves your device.</string>
+    <string name="scanner_permission_grant">Allow camera</string>
+    <string name="scanner_hint_searching">Looking for a document…</string>
+    <string name="scanner_hint_hold_steady">Hold steady</string>
+    <string name="scanner_hint_captured">Captured</string>
+    <string name="scanner_mode_document">Document</string>
+    <string name="scanner_mode_whiteboard">Whiteboard</string>
+    <string name="scanner_mode_card">Card</string>
+    <string name="scanner_mode_photo">Photo</string>
+    <string name="scanner_cd_capture">Capture</string>
+    <string name="scanner_cd_flash_on">Turn flash off</string>
+    <string name="scanner_cd_flash_off">Turn flash on</string>
+    <string name="scanner_cd_gallery">Import from gallery</string>
+    <string name="scanner_cd_review_pages">Review captured pages</string>
+    <string name="scanner_import_failed">Couldn’t import that image</string>
+
+    <!-- Review -->
+    <string name="review_title">Review</string>
+    <string name="review_page_indicator">%1$d / %2$d</string>
+    <string name="review_action_add_page">Add page</string>
+    <string name="review_action_crop">Crop</string>
+    <string name="review_action_rotate">Rotate</string>
+    <string name="review_delete_page_message">Remove this page from the scan?</string>
+    <string name="review_discard_title">Discard scan?</string>
+    <string name="review_discard_body">All captured pages will be thrown away.</string>
+    <string name="review_discard_confirm">Discard</string>
+    <string name="review_keep_editing">Keep editing</string>
+    <string name="review_save_dialog_title">Save document</string>
+    <string name="review_default_name_prefix">Scan</string>
+    <string name="review_document_name_hint">Document name</string>
+    <string name="review_saving">Saving…</string>
+
+    <!-- Filters -->
+    <string name="filter_original">Original</string>
+    <string name="filter_auto">Magic</string>
+    <string name="filter_grayscale">Grayscale</string>
+    <string name="filter_bw">B&amp;W</string>
+    <string name="filter_whiteboard">Whiteboard</string>
+    <string name="filter_photo">Photo</string>
+
+    <!-- Crop -->
+    <string name="crop_title">Adjust corners</string>
+    <string name="crop_detect">Auto-detect</string>
+    <string name="crop_full_page">Full page</string>
+
+    <!-- Document -->
+    <string name="document_tab_pages">Pages</string>
+    <string name="document_tab_text">Text</string>
+    <string name="document_export">Export</string>
+    <string name="document_export_pdf">PDF document</string>
+    <string name="document_export_pdf_desc">Searchable — recognized text is embedded</string>
+    <string name="document_export_save_pdf">Save PDF to device</string>
+    <string name="document_export_images">Pages as images</string>
+    <string name="document_export_text">Copy all text</string>
+    <string name="document_text_copied">Text copied</string>
+    <string name="document_text_pending">Reading text on your pages…</string>
+    <string name="document_text_failed">Text recognition failed.</string>
+    <string name="document_text_empty">No text was found on this page.</string>
+    <string name="document_text_rerun">Recognize again</string>
+    <string name="document_delete_message">Delete “%1$s”? Its pages and recognized text are removed permanently.</string>
+    <string name="document_edit_page">Edit page</string>
+    <string name="document_rename_title">Rename document</string>
+    <string name="document_not_found">This document no longer exists.</string>
+    <string name="document_export_failed">Export failed</string>
+
+    <!-- Edit page -->
+    <string name="edit_page_title">Edit page</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_dynamic_color_desc">Use wallpaper-based colors (Android 12+)</string>
+    <string name="settings_section_scanning">Scanning</string>
+    <string name="settings_auto_capture">Auto-capture</string>
+    <string name="settings_auto_capture_desc">Take the shot automatically once the document is steady</string>
+    <string name="settings_section_ocr">Text recognition</string>
+    <string name="settings_ocr_language">Script</string>
+    <string name="settings_ocr_latin">Latin</string>
+    <string name="settings_ocr_latin_desc">English, French, Spanish, German and more — on-device</string>
+    <string name="settings_ocr_arabic">Arabic</string>
+    <string name="settings_ocr_arabic_desc">العربية — bundled, works offline</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_blurb">Scanni keeps every scan on your device. No accounts, no cloud.</string>
+</resources>

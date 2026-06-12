@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon silhouette: outline sheet + beam, tinted by the system. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Viewfinder brackets -->
+    <path
+        android:pathData="M26,40 L26,33 Q26,26 33,26 L40,26"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M68,26 L75,26 Q82,26 82,33 L82,40"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M82,68 L82,75 Q82,82 75,82 L68,82"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M40,82 L33,82 Q26,82 26,75 L26,68"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+
+    <!-- Sheet outline with folded corner -->
+    <path
+        android:pathData="M43,33 H59 L70,44 V70 a5,5 0 0 1 -5,5 H43 a5,5 0 0 1 -5,-5 V38 a5,5 0 0 1 5,-5 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineJoin="round" />
+
+    <!-- Scan beam -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,61.5 h52 a3.5,3.5 0 0 1 0,7 h-52 a3.5,3.5 0 0 1 0,-7 z" />
+</vector>

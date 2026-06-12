@@ -1,8 +1,13 @@
-.worktrees/
+*.iml
 .gradle/
 .idea/
-*.iml
-local.properties
+.kotlin/
+.worktrees/
 build/
-app/build/
 captures/
+local.properties
+*.keystore
+*.jks
+# The sideload distribution keystore is deliberately committed (see README).
+!signing/release.keystore
+.DS_Store
