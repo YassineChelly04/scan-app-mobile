@@ -1,10 +1,29 @@
-# Scanni 📄✨
+<div align="center">
 
-A beautiful, modern document scanner for Android — Microsoft Lens, reimagined.
+<img src="docs/assets/logo.svg" width="120" alt="Scanni logo"/>
+
+# Scanni
+
+**A beautiful, modern document scanner for Android — Microsoft Lens, reimagined.**
+
+[![Android CI](https://github.com/YassineChelly04/scan-app-mobile/actions/workflows/android-ci.yml/badge.svg)](https://github.com/YassineChelly04/scan-app-mobile/actions/workflows/android-ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/YassineChelly04/scan-app-mobile?label=download&color=2750EC)](https://github.com/YassineChelly04/scan-app-mobile/releases/latest)
+![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/100%25-Kotlin%20%2B%20Compose-7F52FF?logo=kotlin&logoColor=white)
+
+</div>
+
 Point your camera at a page: Scanni finds the edges live, captures automatically
 when you hold steady, perspective-corrects the page, cleans it up with smart
 filters, reads the text on-device, and exports **searchable PDFs**. Everything
 stays on your phone — no accounts, no cloud.
+
+## Download
+
+Grab the latest APK from the
+[**Releases page**](https://github.com/YassineChelly04/scan-app-mobile/releases/latest),
+open it on your phone, and install. Android 8.0 or newer; ~60 MB installed
+(OCR models and vision libraries are bundled so everything works offline).
 
 ## Features
 
@@ -52,6 +71,11 @@ stays on your phone — no accounts, no cloud.
 Requirements: JDK 17+, Android SDK 35. Min SDK 26 (Android 8.0).
 Dependencies resolve from Google Maven, Maven Central, and JitPack
 (Tesseract4Android only).
+
+Release builds (`:app:assembleRelease`) are signed with the keystore committed
+at `signing/release.keystore` so CI releases and local builds install over each
+other. Because that key is public, an APK signature proves nothing about
+origin — only download Scanni from this repository's Releases page.
 
 ## Project layout
 

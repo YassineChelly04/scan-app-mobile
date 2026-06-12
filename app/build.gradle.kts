@@ -19,10 +19,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Sideload distribution key (GitHub Releases). The keystore is committed on
+    // purpose so CI and anyone building from source produce update-compatible
+    // APKs — treat the Releases page, not the signature, as proof of origin.
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("signing/release.keystore")
+            storePassword = "scanni-release"
+            keyAlias = "scanni"
+            keyPassword = "scanni-release"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

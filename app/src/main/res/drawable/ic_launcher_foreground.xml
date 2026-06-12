@@ -4,22 +4,58 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Document sheet -->
+
+    <!-- Viewfinder brackets -->
+    <path
+        android:pathData="M26,40 L26,33 Q26,26 33,26 L40,26"
+        android:strokeColor="#80FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M68,26 L75,26 Q82,26 82,33 L82,40"
+        android:strokeColor="#80FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M82,68 L82,75 Q82,82 75,82 L68,82"
+        android:strokeColor="#80FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M40,82 L33,82 Q26,82 26,75 L26,68"
+        android:strokeColor="#80FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+
+    <!-- Sheet shadow -->
+    <path
+        android:fillColor="#2E102B7A"
+        android:pathData="M44.5,35.5 H60.5 L71.5,46.5 V71.5 a5,5 0 0 1 -5,5 H44.5 a5,5 0 0 1 -5,-5 V40.5 a5,5 0 0 1 5,-5 Z" />
+    <!-- Document sheet with folded corner -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M44,30 h20 a6,6 0 0 1 6,6 v36 a6,6 0 0 1 -6,6 h-20 a6,6 0 0 1 -6,-6 v-36 a6,6 0 0 1 6,-6 z" />
+        android:pathData="M43,33 H59 L70,44 V70 a5,5 0 0 1 -5,5 H43 a5,5 0 0 1 -5,-5 V38 a5,5 0 0 1 5,-5 Z" />
+    <!-- Fold (dog-ear) -->
+    <path
+        android:fillColor="#C7D4FB"
+        android:pathData="M59,33 L70,44 H62 a3,3 0 0 1 -3,-3 Z" />
+
     <!-- Text lines -->
     <path
         android:fillColor="#2750EC"
-        android:pathData="M46.5,40 h15 a2.5,2.5 0 0 1 0,5 h-15 a2.5,2.5 0 0 1 0,-5 z" />
+        android:pathData="M44,40.75 h10 a2.25,2.25 0 0 1 0,4.5 h-10 a2.25,2.25 0 0 1 0,-4.5 z" />
     <path
         android:fillColor="#2750EC"
-        android:pathData="M46.5,49 h10 a2.5,2.5 0 0 1 0,5 h-10 a2.5,2.5 0 0 1 0,-5 z" />
+        android:pathData="M44,48.75 h20 a2.25,2.25 0 0 1 0,4.5 h-20 a2.25,2.25 0 0 1 0,-4.5 z" />
     <path
         android:fillColor="#2750EC"
-        android:pathData="M46.5,58 h13 a2.5,2.5 0 0 1 0,5 h-13 a2.5,2.5 0 0 1 0,-5 z" />
-    <!-- Scan beam crossing the sheet -->
+        android:pathData="M44,56.75 h15 a2.25,2.25 0 0 1 0,4.5 h-15 a2.25,2.25 0 0 1 0,-4.5 z" />
+
+    <!-- Scan beam: glow then core -->
+    <path
+        android:fillColor="#4D5CE1FF"
+        android:pathData="M28,61 h52 a4,4 0 0 1 0,8 h-52 a4,4 0 0 1 0,-8 z" />
     <path
         android:fillColor="#7CF2FF"
-        android:pathData="M34,66.5 h40 a3.5,3.5 0 0 1 0,7 h-40 a3.5,3.5 0 0 1 0,-7 z" />
+        android:pathData="M28,63.25 h52 a1.75,1.75 0 0 1 0,3.5 h-52 a1.75,1.75 0 0 1 0,-3.5 z" />
 </vector>

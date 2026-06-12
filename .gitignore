@@ -8,4 +8,6 @@ captures/
 local.properties
 *.keystore
 *.jks
+# The sideload distribution keystore is deliberately committed (see README).
+!signing/release.keystore
 .DS_Store
