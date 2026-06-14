@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -40,10 +41,12 @@ import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -69,6 +72,7 @@ fun CropEditor(
     detectedQuad: Quad?,
     onApply: (Quad) -> Unit,
     onCancel: () -> Unit,
+    detect: (suspend () -> Quad?)? = null,
 ) {
     val bitmap by produceState<ImageBitmap?>(initialValue = null, imagePath) {
         value = withContext(Dispatchers.Default) {
@@ -82,9 +86,36 @@ fun CropEditor(
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
     var activeHandle by remember { mutableStateOf(CropGeometry.HANDLE_NONE) }
     var touchPosition by remember { mutableStateOf(Offset.Zero) }
+    var userEdited by remember(imagePath) { mutableStateOf(false) }
+    var snapEngaged by remember(imagePath) { mutableStateOf(false) }
+
+    // On-demand document detection so the crop assistant can (re)find the paper
+    // even when capture-time detection missed it.
+    var detecting by remember(imagePath) { mutableStateOf(detect != null) }
+    var liveDetected by remember(imagePath) { mutableStateOf<Quad?>(null) }
+    // Keyed on imagePath only — the caller passes a fresh lambda each recomposition,
+    // and the path is what actually identifies the image to detect.
+    LaunchedEffect(imagePath) {
+        if (detect == null) return@LaunchedEffect
+        detecting = true
+        liveDetected = runCatching { detect() }.getOrNull()
+        detecting = false
+    }
+    val assistQuad = liveDetected ?: detectedQuad
+
+    // Lens-style: when the page has no crop yet, drop the corners straight onto
+    // the detected document as soon as detection resolves (until the user takes over).
+    LaunchedEffect(assistQuad) {
+        val detected = assistQuad
+        if (detected != null && !userEdited && quad == Quad.FULL) {
+            quad = detected
+        }
+    }
 
     val density = LocalDensity.current
+    val haptics = LocalHapticFeedback.current
     val accent = MaterialTheme.colorScheme.primary
+    val detectedColor = MaterialTheme.colorScheme.tertiary
 
     Box(
         Modifier
@@ -130,23 +161,47 @@ fun CropEditor(
                                     Vec2(position.x, position.y),
                                     touchRadius,
                                 )
+                                if (activeHandle != CropGeometry.HANDLE_NONE) userEdited = true
+                                snapEngaged = false
                                 touchPosition = position
                             },
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 touchPosition = change.position
                                 if (activeHandle == CropGeometry.HANDLE_NONE) return@detectDragGestures
-                                val target = t.viewToImage(
+                                var target = t.viewToImage(
                                     Vec2(change.position.x, change.position.y),
                                 )
                                 val delta = Vec2(
                                     dragAmount.x / (image.width * t.scale),
                                     dragAmount.y / (image.height * t.scale),
                                 )
+                                // Magnetic assist: pull a dragged corner onto the
+                                // detected document edge, buzzing once on contact.
+                                // Read detection state here (not the captured val) so
+                                // a result that resolves after setup is still used.
+                                if (CropGeometry.isCornerHandle(activeHandle)) {
+                                    val reference = (liveDetected ?: detectedQuad)
+                                        ?.corners?.getOrNull(activeHandle)
+                                    val snapped =
+                                        CropGeometry.snapToCorner(target, reference, SNAP_RADIUS)
+                                    val nowSnapped = snapped !== target
+                                    if (nowSnapped && !snapEngaged) {
+                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                    snapEngaged = nowSnapped
+                                    target = snapped
+                                }
                                 quad = CropGeometry.drag(quad, activeHandle, target, delta)
                             },
-                            onDragEnd = { activeHandle = CropGeometry.HANDLE_NONE },
-                            onDragCancel = { activeHandle = CropGeometry.HANDLE_NONE },
+                            onDragEnd = {
+                                activeHandle = CropGeometry.HANDLE_NONE
+                                snapEngaged = false
+                            },
+                            onDragCancel = {
+                                activeHandle = CropGeometry.HANDLE_NONE
+                                snapEngaged = false
+                            },
                         )
                     },
             ) {
@@ -188,6 +243,25 @@ fun CropEditor(
                     addPath(quadPath)
                 }
                 drawPath(dimPath, color = Color.Black.copy(alpha = 0.55f))
+
+                // Faint guide showing where the document was detected.
+                val guide = assistQuad
+                if (guide != null && guide != quad) {
+                    val guideCorners = guide.corners.map {
+                        val v = t.imageToView(it)
+                        Offset(v.x, v.y)
+                    }
+                    val guidePath = Path().apply {
+                        moveTo(guideCorners[0].x, guideCorners[0].y)
+                        for (i in 1 until guideCorners.size) lineTo(guideCorners[i].x, guideCorners[i].y)
+                        close()
+                    }
+                    drawPath(
+                        guidePath,
+                        color = detectedColor.copy(alpha = 0.7f),
+                        style = Stroke(width = 1.5.dp.toPx()),
+                    )
+                }
 
                 drawPath(quadPath, color = accent, style = Stroke(2.5.dp.toPx()))
 
@@ -241,18 +315,32 @@ fun CropEditor(
                 .padding(horizontal = 24.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (detectedQuad != null) {
+            val detected = assistQuad
+            if (detecting && detected == null) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(22.dp),
+                )
+                Spacer(Modifier.size(12.dp))
+            } else if (detected != null) {
                 CropAction(
                     icon = Icons.Rounded.CropFree,
                     label = stringResource(R.string.crop_detect),
-                    onClick = { quad = detectedQuad },
+                    onClick = {
+                        quad = detected
+                        userEdited = true
+                    },
                 )
                 Spacer(Modifier.size(12.dp))
             }
             CropAction(
                 icon = Icons.Rounded.FitScreen,
                 label = stringResource(R.string.crop_full_page),
-                onClick = { quad = Quad.FULL },
+                onClick = {
+                    quad = Quad.FULL
+                    userEdited = true
+                },
             )
             Spacer(Modifier.weight(1f))
             Surface(
@@ -361,3 +449,6 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMagnifier(
 }
 
 private const val EDITOR_IMAGE_SIZE = 1600
+
+/** Magnetic snap distance (fraction of image size) for corner-to-detected-edge assist. */
+private const val SNAP_RADIUS = 0.035f

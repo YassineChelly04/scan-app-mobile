@@ -47,6 +47,16 @@ object CropGeometry {
         else -> quad
     }
 
+    /**
+     * Magnetic crop assist: if a dragged corner lands within [radius] of the
+     * matching corner of a detected document ([reference]), returns [reference]
+     * so the corner snaps onto the detected edge; otherwise returns [target].
+     */
+    fun snapToCorner(target: Vec2, reference: Vec2?, radius: Float): Vec2 {
+        if (reference == null) return target
+        return if (target.distanceTo(reference) <= radius) reference else target
+    }
+
     /** Moves one corner to [target] (clamped to the image), keeping the quad valid. */
     fun dragCorner(quad: Quad, corner: Int, target: Vec2): Quad {
         val candidate = quad.withCorner(corner, target.clamped())

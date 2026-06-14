@@ -3,9 +3,12 @@ package com.scanni.app.vision
 import android.graphics.Bitmap
 import com.scanni.app.core.geometry.Quad
 import com.scanni.app.core.geometry.Vec2
+import com.scanni.app.core.image.ImageIo
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.CvType
@@ -87,6 +90,23 @@ class OpenCvDocumentDetector {
         work.release()
         return result?.takeIf { it.isConvex() }
     }
+
+    /**
+     * Decodes an EXIF-oriented bitmap from [path] and detects the document quad —
+     * used by the crop editor to (re)find the paper on demand. Returns null if the
+     * image can't be read or no credible document is found.
+     */
+    suspend fun detectFile(path: String, minAreaFraction: Float = CROP_ASSIST_MIN_AREA): Quad? =
+        withContext(Dispatchers.Default) {
+            runCatching {
+                val bitmap = ImageIo.decodeOriented(path, FILE_DETECT_SIZE)
+                try {
+                    detect(bitmap, minAreaFraction)
+                } finally {
+                    bitmap.recycle()
+                }
+            }.getOrNull()
+        }
 
     /** Detection on a captured/imported image (e.g. for initial crop suggestions). */
     fun detect(bitmap: Bitmap, minAreaFraction: Float): Quad? {
@@ -184,6 +204,9 @@ class OpenCvDocumentDetector {
 
     private companion object {
         const val WORK_SIZE = 480
+        const val FILE_DETECT_SIZE = 1280
+        /** Permissive area floor for on-demand crop-editor detection. */
+        const val CROP_ASSIST_MIN_AREA = 0.06f
         const val MAX_CONTOURS = 12
         const val ADAPTIVE_BLOCK = 31
         const val ADAPTIVE_C = 8.0
