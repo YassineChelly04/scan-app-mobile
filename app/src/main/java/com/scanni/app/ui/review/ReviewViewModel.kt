@@ -75,7 +75,14 @@ class ReviewViewModel(
             croppingPageId = cropping,
             saving = saving,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(2_000), ReviewUiState())
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(2_000),
+        // Seed with the session's current pages so the screen never momentarily
+        // looks empty on entry — otherwise the "no pages left -> leave" guard in
+        // ReviewScreen fires before the combined state arrives and bounces back.
+        ReviewUiState(pages = session.pages.value),
+    )
 
     init {
         viewModelScope.launch {
