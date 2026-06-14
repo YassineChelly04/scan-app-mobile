@@ -14,8 +14,8 @@ android {
         applicationId = "com.scanni.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -66,6 +66,18 @@ android {
     // OCR models and fonts must not be re-compressed by AAPT.
     androidResources {
         noCompress += "traineddata"
+    }
+
+    // Per-ABI APK splits so each phone downloads only its own native libraries
+    // (OpenCV + Tesseract bundle a .so set for every ABI — the bulk of the size).
+    // A universal APK is still built as a fallback for unknown architectures.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
     }
 }
 

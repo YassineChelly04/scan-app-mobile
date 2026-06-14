@@ -21,11 +21,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Crop
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Rotate90DegreesCw
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Crop
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Rotate90DegreesCw
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -128,7 +128,7 @@ fun ReviewScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBackToCamera) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back))
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.cd_back))
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -153,7 +153,7 @@ fun ReviewScreen(
                     onClick = { showDeletePageDialog = true },
                     enabled = currentPage != null && !state.saving,
                 ) {
-                    Icon(Icons.Outlined.Delete, stringResource(R.string.action_delete))
+                    Icon(Icons.Rounded.Delete, stringResource(R.string.action_delete))
                 }
                 Button(
                     onClick = { showSaveDialog = true },
@@ -224,17 +224,17 @@ fun ReviewScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 ToolbarAction(
-                    icon = Icons.Outlined.Crop,
+                    icon = Icons.Rounded.Crop,
                     label = stringResource(R.string.review_action_crop),
                     enabled = currentPage != null,
                 ) { currentPage?.let { viewModel.openCrop(it.id) } }
                 ToolbarAction(
-                    icon = Icons.Outlined.Rotate90DegreesCw,
+                    icon = Icons.Rounded.Rotate90DegreesCw,
                     label = stringResource(R.string.review_action_rotate),
                     enabled = currentPage != null,
                 ) { currentPage?.let { viewModel.rotate(it.id) } }
                 ToolbarAction(
-                    icon = Icons.Outlined.Add,
+                    icon = Icons.Rounded.Add,
                     label = stringResource(R.string.review_action_add_page),
                     enabled = !state.saving,
                 ) { onBackToCamera() }

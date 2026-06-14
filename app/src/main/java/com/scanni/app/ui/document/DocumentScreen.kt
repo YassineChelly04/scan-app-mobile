@@ -19,19 +19,19 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DriveFileRenameOutline
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Image
-import androidx.compose.material.icons.outlined.IosShare
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.PictureAsPdf
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.DriveFileMove
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.DriveFileRenameOutline
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.IosShare
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PictureAsPdf
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.SaveAlt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -147,7 +147,7 @@ fun DocumentScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back))
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.cd_back))
                 }
                 Text(
                     text = document?.title.orEmpty(),
@@ -169,7 +169,7 @@ fun DocumentScreen(
                         )
                     } else {
                         Icon(
-                            Icons.Outlined.IosShare,
+                            Icons.Rounded.IosShare,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )
@@ -179,13 +179,13 @@ fun DocumentScreen(
                 }
                 Box {
                     IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Outlined.MoreVert, stringResource(R.string.cd_more_options))
+                        Icon(Icons.Rounded.MoreVert, stringResource(R.string.cd_more_options))
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_rename)) },
                             leadingIcon = {
-                                Icon(Icons.Outlined.DriveFileRenameOutline, null)
+                                Icon(Icons.Rounded.DriveFileRenameOutline, null)
                             },
                             onClick = {
                                 menuOpen = false
@@ -195,7 +195,7 @@ fun DocumentScreen(
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.folder_move_title)) },
                             leadingIcon = {
-                                Icon(Icons.AutoMirrored.Outlined.DriveFileMove, null)
+                                Icon(Icons.AutoMirrored.Rounded.DriveFileMove, null)
                             },
                             onClick = {
                                 menuOpen = false
@@ -204,7 +204,7 @@ fun DocumentScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.document_text_rerun)) },
-                            leadingIcon = { Icon(Icons.Outlined.Refresh, null) },
+                            leadingIcon = { Icon(Icons.Rounded.Refresh, null) },
                             onClick = {
                                 menuOpen = false
                                 viewModel.rerunOcr()
@@ -212,7 +212,7 @@ fun DocumentScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.action_delete)) },
-                            leadingIcon = { Icon(Icons.Outlined.Delete, null) },
+                            leadingIcon = { Icon(Icons.Rounded.Delete, null) },
                             onClick = {
                                 menuOpen = false
                                 showDeleteDialog = true
@@ -342,7 +342,7 @@ private fun PagesTab(
                         .align(Alignment.BottomEnd)
                         .padding(20.dp),
                 ) {
-                    Icon(Icons.Outlined.Edit, stringResource(R.string.document_edit_page))
+                    Icon(Icons.Rounded.Edit, stringResource(R.string.document_edit_page))
                 }
             }
         }
@@ -405,7 +405,7 @@ private fun TextTab(
             Row(Modifier.padding(horizontal = 12.dp)) {
                 TextButton(onClick = onCopyAll) {
                     Icon(
-                        Icons.Outlined.ContentCopy,
+                        Icons.Rounded.ContentCopy,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                     )
@@ -475,22 +475,22 @@ private fun ExportSheet(
         ListItem(
             headlineContent = { Text(stringResource(R.string.document_export_pdf)) },
             supportingContent = { Text(stringResource(R.string.document_export_pdf_desc)) },
-            leadingContent = { Icon(Icons.Outlined.PictureAsPdf, null) },
+            leadingContent = { Icon(Icons.Rounded.PictureAsPdf, null) },
             modifier = Modifier.clickable(onClick = onSharePdf),
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.document_export_save_pdf)) },
-            leadingContent = { Icon(Icons.Outlined.SaveAlt, null) },
+            leadingContent = { Icon(Icons.Rounded.SaveAlt, null) },
             modifier = Modifier.clickable(onClick = onSavePdf),
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.document_export_images)) },
-            leadingContent = { Icon(Icons.Outlined.Image, null) },
+            leadingContent = { Icon(Icons.Rounded.Image, null) },
             modifier = Modifier.clickable(onClick = onShareImages),
         )
         ListItem(
             headlineContent = { Text(stringResource(R.string.document_export_text)) },
-            leadingContent = { Icon(Icons.Outlined.ContentCopy, null) },
+            leadingContent = { Icon(Icons.Rounded.ContentCopy, null) },
             modifier = Modifier
                 .clickable(onClick = onCopyText)
                 .padding(bottom = 24.dp),

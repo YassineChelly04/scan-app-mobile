@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Crop
-import androidx.compose.material.icons.outlined.Rotate90DegreesCw
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Crop
+import androidx.compose.material.icons.rounded.Rotate90DegreesCw
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -73,7 +73,7 @@ fun EditPageScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onDone) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back))
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.cd_back))
                 }
                 Text(
                     text = stringResource(R.string.edit_page_title),
@@ -136,12 +136,12 @@ fun EditPageScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 EditAction(
-                    icon = Icons.Outlined.Crop,
+                    icon = Icons.Rounded.Crop,
                     label = stringResource(R.string.review_action_crop),
                     onClick = viewModel::openCrop,
                 )
                 EditAction(
-                    icon = Icons.Outlined.Rotate90DegreesCw,
+                    icon = Icons.Rounded.Rotate90DegreesCw,
                     label = stringResource(R.string.review_action_rotate),
                     onClick = viewModel::rotate,
                 )

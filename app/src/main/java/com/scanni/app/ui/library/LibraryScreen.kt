@@ -32,14 +32,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DocumentScanner
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.automirrored.rounded.DriveFileMove
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.DocumentScanner
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -128,7 +128,7 @@ fun LibraryScreen(
                 ExtendedFloatingActionButton(
                     onClick = onScan,
                     icon = {
-                        Icon(Icons.Outlined.DocumentScanner, contentDescription = null)
+                        Icon(Icons.Rounded.DocumentScanner, contentDescription = null)
                     },
                     text = { Text(stringResource(R.string.library_scan)) },
                 )
@@ -144,7 +144,7 @@ fun LibraryScreen(
                 )
 
                 state.documents.isEmpty() -> EmptyState(
-                    icon = Icons.Outlined.DocumentScanner,
+                    icon = Icons.Rounded.DocumentScanner,
                     title = stringResource(R.string.library_empty_title),
                     body = stringResource(R.string.library_empty_body),
                 )
@@ -262,7 +262,7 @@ private fun LibraryHeader(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onClearSelection) {
-                        Icon(Icons.Outlined.Close, stringResource(R.string.cd_close))
+                        Icon(Icons.Rounded.Close, stringResource(R.string.cd_close))
                     }
                     Text(
                         text = stringResource(R.string.library_selected_count, state.selection.size),
@@ -271,12 +271,12 @@ private fun LibraryHeader(
                     )
                     IconButton(onClick = onMoveSelected) {
                         Icon(
-                            Icons.AutoMirrored.Outlined.DriveFileMove,
+                            Icons.AutoMirrored.Rounded.DriveFileMove,
                             stringResource(R.string.folder_move_title),
                         )
                     }
                     IconButton(onClick = onDeleteSelected) {
-                        Icon(Icons.Outlined.Delete, stringResource(R.string.action_delete))
+                        Icon(Icons.Rounded.Delete, stringResource(R.string.action_delete))
                     }
                 }
             } else {
@@ -294,7 +294,7 @@ private fun LibraryHeader(
                         modifier = Modifier.weight(1f),
                     )
                     FilledTonalIconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Outlined.Settings, stringResource(R.string.library_settings))
+                        Icon(Icons.Rounded.Settings, stringResource(R.string.library_settings))
                     }
                 }
                 SearchField(
@@ -356,7 +356,7 @@ private fun FolderBar(
                     label = { Text("${folder.name} · ${folder.documentCount}") },
                     leadingIcon = {
                         Icon(
-                            Icons.Outlined.Folder,
+                            Icons.Rounded.Folder,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )
@@ -387,7 +387,7 @@ private fun FolderBar(
                 label = { Text(stringResource(R.string.folder_new)) },
                 leadingIcon = {
                     Icon(
-                        Icons.Outlined.Add,
+                        Icons.Rounded.Add,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -498,7 +498,7 @@ private fun SearchResults(
 ) {
     if (hits.isEmpty()) {
         EmptyState(
-            icon = Icons.Outlined.Search,
+            icon = Icons.Rounded.Search,
             title = stringResource(R.string.library_no_results, query),
             body = "",
         )
@@ -561,7 +561,7 @@ fun MoveToFolderSheet(
             item {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.folder_none)) },
-                    leadingContent = { Icon(Icons.Outlined.Close, contentDescription = null) },
+                    leadingContent = { Icon(Icons.Rounded.Close, contentDescription = null) },
                     modifier = Modifier.clickable { onMove(null) },
                 )
             }
@@ -570,7 +570,7 @@ fun MoveToFolderSheet(
                 ListItem(
                     headlineContent = { Text(folder.name) },
                     supportingContent = { Text(folder.documentCount.toString()) },
-                    leadingContent = { Icon(Icons.Outlined.Folder, contentDescription = null) },
+                    leadingContent = { Icon(Icons.Rounded.Folder, contentDescription = null) },
                     modifier = Modifier.clickable { onMove(folder.id) },
                 )
             }

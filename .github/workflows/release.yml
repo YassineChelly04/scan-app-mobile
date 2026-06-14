@@ -43,27 +43,42 @@ jobs:
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace
 
-      - name: Build signed release APK
+      - name: Build signed release APKs
         run: ./gradlew :app:assembleRelease --stacktrace
 
-      - name: Prepare artifact
+      - name: Prepare artifacts
         id: artifact
         run: |
-          APK="Scanni-${{ steps.version.outputs.tag }}.apk"
-          cp app/build/outputs/apk/release/app-release.apk "$APK"
-          sha256sum "$APK" > "$APK.sha256"
-          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          TAG="${{ steps.version.outputs.tag }}"
+          SRC=app/build/outputs/apk/release
+          OUT="$GITHUB_WORKSPACE/dist"
+          mkdir -p "$OUT"
+          # Rename each per-ABI (and the universal) APK to a friendly name.
+          for f in "$SRC"/app-*-release.apk; do
+            abi=$(basename "$f" | sed -E 's/^app-(.+)-release\.apk$/\1/')
+            cp "$f" "$OUT/Scanni-${TAG}-${abi}.apk"
+          done
+          cd "$OUT"
+          sha256sum Scanni-*.apk > checksums.txt
+          ls -la
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          APK="${{ steps.artifact.outputs.apk }}"
+          cd "$GITHUB_WORKSPACE/dist"
           {
             echo "## Scanni $TAG"
             echo
-            echo "**Download \`$APK\` below, open it on your Android phone (8.0+), and install.**"
+            echo "### Which file do I download?"
+            echo "- **Almost every phone (2017+) → \`Scanni-${TAG}-arm64-v8a.apk\`** — pick this one."
+            echo "- Older 32-bit phones → \`Scanni-${TAG}-armeabi-v7a.apk\`"
+            echo "- Not sure, or an emulator → \`Scanni-${TAG}-universal.apk\` (largest; runs everywhere)"
+            echo
+            echo "Open the file on your Android phone (8.0+) and tap install."
+            echo
+            echo "<details><summary><b>What's inside</b></summary>"
             echo
             echo "- 📷 Live document edge detection with auto-capture"
             echo "- ✂️ Intelligent crop with magnifier-assisted manual editor"
@@ -72,13 +87,14 @@ jobs:
             echo "- 🔎 Full-text search across all scans"
             echo "- 📄 Searchable PDF export (invisible text layer, Arabic included)"
             echo "- 🔒 100% offline — the camera is the only permission"
+            echo "</details>"
             echo
-            echo "### Checksum"
+            echo "### Checksums (SHA-256)"
             echo '```'
-            cat "$APK.sha256"
+            cat checksums.txt
             echo '```'
           } > notes.md
-          gh release create "$TAG" "$APK" "$APK.sha256" \
+          gh release create "$TAG" Scanni-*.apk checksums.txt \
             --target "$GITHUB_SHA" \
             --title "Scanni $TAG" \
             --notes-file notes.md

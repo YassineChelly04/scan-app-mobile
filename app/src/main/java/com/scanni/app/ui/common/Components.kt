@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -259,7 +259,7 @@ fun SearchField(
         },
         leadingIcon = {
             Icon(
-                Icons.Outlined.Search,
+                Icons.Rounded.Search,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -268,7 +268,7 @@ fun SearchField(
             {
                 IconButton(onClick = { onValueChange("") }) {
                     Icon(
-                        Icons.Outlined.Close,
+                        Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.cd_close),
                     )
                 }
