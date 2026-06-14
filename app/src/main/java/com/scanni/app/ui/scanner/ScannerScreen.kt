@@ -8,10 +8,15 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,15 +32,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FlashOff
 import androidx.compose.material.icons.outlined.FlashOn
 import androidx.compose.material.icons.outlined.PhotoLibrary
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +65,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -74,6 +79,7 @@ import com.scanni.app.core.geometry.OverlayTransform
 import com.scanni.app.core.geometry.Quad
 import com.scanni.app.core.geometry.QuadStabilizer
 import com.scanni.app.di.AppGraph
+import com.scanni.app.domain.model.CapturedPage
 import com.scanni.app.domain.model.ScanMode
 import com.scanni.app.ui.common.PageImage
 import com.scanni.app.ui.common.graphViewModel
@@ -226,10 +232,10 @@ private fun CameraContent(
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(MAX_GALLERY_PICKS),
     ) { uris ->
+        // Imported pages join the stack; the Next button then drives navigation,
+        // so capture and import share one consistent "review when ready" flow.
         if (uris.isNotEmpty()) {
-            scope.launch {
-                if (viewModel.importImages(context, uris)) onReview()
-            }
+            scope.launch { viewModel.importImages(context, uris) }
         }
     }
 
@@ -265,19 +271,19 @@ private fun CameraContent(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 20.dp),
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ModeSelector(
                 selected = state.mode,
                 onSelect = viewModel::setMode,
             )
-            Spacer(Modifier.size(18.dp))
-            Row(
+            Spacer(Modifier.size(20.dp))
+            Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 36.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = 32.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 ScannerIconButton(
                     onClick = {
@@ -287,6 +293,7 @@ private fun CameraContent(
                             ),
                         )
                     },
+                    modifier = Modifier.align(Alignment.CenterStart),
                 ) {
                     Icon(
                         Icons.Outlined.PhotoLibrary,
@@ -294,17 +301,22 @@ private fun CameraContent(
                         tint = Color.White,
                     )
                 }
-                Spacer(Modifier.weight(1f))
                 ShutterButton(
                     detection = state.detection,
                     capturing = state.capturing,
                     onClick = viewModel::requestCapture,
                 )
-                Spacer(Modifier.weight(1f))
-                PageStackButton(
-                    pages = state.pages,
-                    onClick = onReview,
-                )
+            }
+            // The unmistakable "next step": appears the moment a page exists.
+            AnimatedVisibility(
+                visible = state.pages.isNotEmpty(),
+                enter = scaleIn(tween(220), initialScale = 0.85f) + fadeIn(tween(220)),
+                exit = scaleOut(tween(150), targetScale = 0.85f) + fadeOut(tween(150)),
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(Modifier.size(18.dp))
+                    ReviewNextButton(pages = state.pages, onClick = onReview)
+                }
             }
         }
     }
@@ -480,40 +492,52 @@ private fun ShutterButton(
     }
 }
 
+/**
+ * The primary "continue" action. A bold branded pill — last-page thumbnail,
+ * page count and a forward arrow — so moving to review is impossible to miss.
+ */
 @Composable
-private fun PageStackButton(
-    pages: List<com.scanni.app.domain.model.CapturedPage>,
+private fun ReviewNextButton(
+    pages: List<CapturedPage>,
     onClick: () -> Unit,
 ) {
-    Box(Modifier.width(56.dp), contentAlignment = Alignment.Center) {
-        if (pages.isEmpty()) return@Box
-        Box(
-            Modifier
-                .size(52.dp)
-                .clip(MaterialTheme.shapes.small)
-                .clickable(onClick = onClick),
+    val label = pluralStringResource(R.plurals.scanner_review_pages, pages.size, pages.size)
+    Surface(
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = CircleShape,
+        shadowElevation = 8.dp,
+        modifier = Modifier
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = label },
+    ) {
+        Row(
+            Modifier.padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PageImage(
                 path = pages.last().originalPath,
-                modifier = Modifier.fillMaxSize(),
-                contentDescription = stringResource(R.string.scanner_cd_review_pages),
-            )
-            Badge(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(2.dp),
-            ) {
-                Text(pages.size.toString())
-            }
+                    .size(40.dp)
+                    .clip(CircleShape),
+            )
+            Text(text = label, style = MaterialTheme.typography.titleSmall)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
         }
     }
 }
 
 @Composable
-private fun ScannerIconButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun ScannerIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
     IconButton(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .clip(CircleShape)
             .background(Color.Black.copy(alpha = 0.4f)),
     ) {

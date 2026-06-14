@@ -64,6 +64,14 @@
     <string name="scanner_cd_gallery">استيراد من المعرض</string>
     <string name="scanner_cd_review_pages">مراجعة الصفحات الملتقطة</string>
     <string name="scanner_import_failed">تعذّر استيراد هذه الصورة</string>
+    <plurals name="scanner_review_pages">
+        <item quantity="zero">مراجعة %1$d صفحة</item>
+        <item quantity="one">مراجعة صفحة واحدة</item>
+        <item quantity="two">مراجعة صفحتين</item>
+        <item quantity="few">مراجعة %1$d صفحات</item>
+        <item quantity="many">مراجعة %1$d صفحة</item>
+        <item quantity="other">مراجعة %1$d صفحة</item>
+    </plurals>
 
     <!-- Review -->
     <string name="review_title">مراجعة</string>
