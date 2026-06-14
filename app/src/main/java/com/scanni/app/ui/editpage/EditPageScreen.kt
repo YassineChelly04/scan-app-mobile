@@ -159,6 +159,7 @@ fun EditPageScreen(
                     detectedQuad = null,
                     onApply = viewModel::applyCrop,
                     onCancel = viewModel::closeCrop,
+                    detect = { graph.documentDetector.detectFile(page.originalPath) },
                 )
             }
         }

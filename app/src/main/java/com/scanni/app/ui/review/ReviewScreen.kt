@@ -266,6 +266,7 @@ fun ReviewScreen(
                     detectedQuad = page.detectedQuad,
                     onApply = { viewModel.applyCrop(pageId, it) },
                     onCancel = { viewModel.closeCrop() },
+                    detect = { graph.documentDetector.detectFile(page.originalPath) },
                 )
             }
         }

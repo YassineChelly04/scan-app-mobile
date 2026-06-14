@@ -38,8 +38,10 @@ libraries are bundled, so everything works fully offline.
   gallery import (no storage permission needed — Photo Picker)
 
 **Perfect the page**
-- Intelligent crop: detected corners pre-applied, manual editor with draggable
-  corners *and* edges plus a magnifier loupe for pixel-accurate placement
+- Intelligent crop: edges auto-detected and corners pre-applied. The manual
+  editor **re-detects the page on demand**, snaps corners magnetically onto the
+  detected edges (with haptic feedback) and shows a magnifier loupe for
+  pixel-accurate placement — draggable corners *and* edges
 - Six filters with live mini-previews: Original, Magic (illumination-flattening
   color), Grayscale, B&W, Whiteboard, Photo
 - Rotate, reorder (drag thumbnails), add or delete pages — before *and* after

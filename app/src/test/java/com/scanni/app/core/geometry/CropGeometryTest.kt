@@ -73,4 +73,27 @@ class CropGeometryTest {
         val result = CropGeometry.dragEdge(square, 0, Vec2(0f, 0.7f))
         assertEquals(square, result)
     }
+
+    @Test
+    fun `snapToCorner snaps when within radius`() {
+        val snapped = CropGeometry.snapToCorner(
+            target = Vec2(0.205f, 0.205f),
+            reference = Vec2(0.2f, 0.2f),
+            radius = 0.03f,
+        )
+        assertEquals(Vec2(0.2f, 0.2f), snapped)
+    }
+
+    @Test
+    fun `snapToCorner leaves the target alone when out of range`() {
+        val target = Vec2(0.5f, 0.5f)
+        val snapped = CropGeometry.snapToCorner(target, Vec2(0.2f, 0.2f), radius = 0.03f)
+        assertEquals(target, snapped)
+    }
+
+    @Test
+    fun `snapToCorner with no reference returns the target`() {
+        val target = Vec2(0.5f, 0.5f)
+        assertEquals(target, CropGeometry.snapToCorner(target, reference = null, radius = 0.03f))
+    }
 }
