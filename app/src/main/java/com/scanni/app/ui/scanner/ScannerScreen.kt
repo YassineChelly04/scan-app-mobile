@@ -35,11 +35,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.FlashOff
-import androidx.compose.material.icons.outlined.FlashOn
-import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.FlashOff
+import androidx.compose.material.icons.rounded.FlashOn
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -142,16 +142,16 @@ fun ScannerScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ScannerIconButton(onClick = onClose) {
-                Icon(Icons.Outlined.Close, stringResource(R.string.cd_close), tint = Color.White)
+                Icon(Icons.Rounded.Close, stringResource(R.string.cd_close), tint = Color.White)
             }
             Spacer(Modifier.weight(1f))
             if (hasPermission) {
                 ScannerIconButton(onClick = viewModel::toggleTorch) {
                     Icon(
                         imageVector = if (state.torchOn) {
-                            Icons.Outlined.FlashOn
+                            Icons.Rounded.FlashOn
                         } else {
-                            Icons.Outlined.FlashOff
+                            Icons.Rounded.FlashOff
                         },
                         contentDescription = stringResource(
                             if (state.torchOn) R.string.scanner_cd_flash_on else R.string.scanner_cd_flash_off,
@@ -296,7 +296,7 @@ private fun CameraContent(
                     modifier = Modifier.align(Alignment.CenterStart),
                 ) {
                     Icon(
-                        Icons.Outlined.PhotoLibrary,
+                        Icons.Rounded.PhotoLibrary,
                         stringResource(R.string.scanner_cd_gallery),
                         tint = Color.White,
                     )
@@ -524,7 +524,7 @@ private fun ReviewNextButton(
                     .clip(CircleShape),
             )
             Text(text = label, style = MaterialTheme.typography.titleSmall)
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
         }
     }
 }

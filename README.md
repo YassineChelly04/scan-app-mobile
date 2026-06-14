@@ -21,9 +21,11 @@ stays on your phone — no accounts, no cloud.
 ## Download
 
 Grab the latest APK from the
-[**Releases page**](https://github.com/YassineChelly04/scan-app-mobile/releases/latest),
-open it on your phone, and install. Android 8.0 or newer; ~60 MB installed
-(OCR models and vision libraries are bundled so everything works offline).
+[**Releases page**](https://github.com/YassineChelly04/scan-app-mobile/releases/latest)
+and install it on your phone (Android 8.0+). Releases ship **per-architecture**
+APKs — pick `…-arm64-v8a.apk` for almost any phone from 2017 on (~60 MB), or
+the `…-universal.apk` fallback if unsure. OCR models, fonts and vision
+libraries are bundled, so everything works fully offline.
 
 ## Features
 

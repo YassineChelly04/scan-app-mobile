@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.CropFree
-import androidx.compose.material.icons.outlined.FitScreen
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.CropFree
+import androidx.compose.material.icons.rounded.FitScreen
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -223,7 +223,7 @@ fun CropEditor(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onCancel) {
-                Icon(Icons.Outlined.Close, stringResource(R.string.cd_close), tint = Color.White)
+                Icon(Icons.Rounded.Close, stringResource(R.string.cd_close), tint = Color.White)
             }
             Text(
                 text = stringResource(R.string.crop_title),
@@ -243,14 +243,14 @@ fun CropEditor(
         ) {
             if (detectedQuad != null) {
                 CropAction(
-                    icon = Icons.Outlined.CropFree,
+                    icon = Icons.Rounded.CropFree,
                     label = stringResource(R.string.crop_detect),
                     onClick = { quad = detectedQuad },
                 )
                 Spacer(Modifier.size(12.dp))
             }
             CropAction(
-                icon = Icons.Outlined.FitScreen,
+                icon = Icons.Rounded.FitScreen,
                 label = stringResource(R.string.crop_full_page),
                 onClick = { quad = Quad.FULL },
             )
@@ -261,7 +261,7 @@ fun CropEditor(
             ) {
                 IconButton(onClick = { onApply(quad) }) {
                     Icon(
-                        Icons.Outlined.Check,
+                        Icons.Rounded.Check,
                         stringResource(R.string.action_done),
                         tint = MaterialTheme.colorScheme.onPrimary,
                     )
