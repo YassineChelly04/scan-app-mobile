@@ -60,6 +60,10 @@
     <string name="scanner_cd_gallery">Import from gallery</string>
     <string name="scanner_cd_review_pages">Review captured pages</string>
     <string name="scanner_import_failed">Couldn’t import that image</string>
+    <plurals name="scanner_review_pages">
+        <item quantity="one">Review %1$d page</item>
+        <item quantity="other">Review %1$d pages</item>
+    </plurals>
 
     <!-- Review -->
     <string name="review_title">Review</string>

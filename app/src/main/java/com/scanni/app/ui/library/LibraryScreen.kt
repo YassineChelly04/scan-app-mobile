@@ -41,12 +41,13 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -282,8 +283,8 @@ private fun LibraryHeader(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(start = 20.dp, end = 4.dp),
+                        .height(68.dp)
+                        .padding(start = 20.dp, end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -292,7 +293,7 @@ private fun LibraryHeader(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                     )
-                    IconButton(onClick = onOpenSettings) {
+                    FilledTonalIconButton(onClick = onOpenSettings) {
                         Icon(Icons.Outlined.Settings, stringResource(R.string.library_settings))
                     }
                 }
@@ -417,13 +418,17 @@ private fun DocumentGrid(
     ) {
         items(documents, key = { it.id }) { document ->
             val selected = document.id in selection
-            Card(
-                colors = CardDefaults.cardColors(
+            ElevatedCard(
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.elevatedCardColors(
                     containerColor = if (selected) {
                         MaterialTheme.colorScheme.secondaryContainer
                     } else {
-                        MaterialTheme.colorScheme.surfaceVariant
+                        MaterialTheme.colorScheme.surfaceContainerHigh
                     },
+                ),
+                elevation = CardDefaults.elevatedCardElevation(
+                    defaultElevation = if (selected) 0.dp else 2.dp,
                 ),
                 modifier = Modifier
                     .animateItem()
@@ -437,13 +442,14 @@ private fun DocumentGrid(
                         },
                     ),
             ) {
-                Box {
+                Box(Modifier.padding(6.dp)) {
                     PageImage(
                         path = document.thumbPath,
                         revision = document.updatedAt.hashCode(),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(3f / 4f),
+                            .aspectRatio(3f / 4f)
+                            .clip(MaterialTheme.shapes.medium),
                     )
                     if (selected) {
                         Icon(
@@ -458,14 +464,14 @@ private fun DocumentGrid(
                         )
                     }
                 }
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                Column(Modifier.padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 12.dp)) {
                     Text(
                         text = document.title,
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(3.dp))
                     Text(
                         text = formatTimestamp(document.createdAt, dateFormatter) + " · " +
                             pluralStringResource(
