@@ -10,6 +10,7 @@ import com.scanni.app.domain.model.ScanFilter
 import com.scanni.app.domain.processing.PageProcessor
 import com.scanni.app.domain.usecase.SaveScanUseCase
 import com.scanni.app.core.image.ImageIo
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,8 +56,8 @@ class ReviewViewModel(
     private val croppingPageId = MutableStateFlow<String?>(null)
     private val saving = MutableStateFlow(false)
 
-    private val previewJobs = HashMap<String, Job>()
-    private val chipJobs = HashMap<String, Job>()
+    private val previewJobs = ConcurrentHashMap<String, Job>()
+    private val chipJobs = ConcurrentHashMap<String, Job>()
 
     private val _events = MutableSharedFlow<ReviewEvent>(extraBufferCapacity = 4)
     val events: SharedFlow<ReviewEvent> = _events

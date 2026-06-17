@@ -16,6 +16,8 @@ import com.scanni.app.domain.repo.SettingsRepository
 import com.scanni.app.vision.OpenCvDocumentDetector
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -66,6 +68,9 @@ class ScannerViewModel(
 
     private val cameraState = MutableStateFlow(CameraState())
     private var cooldownUntil = 0L
+
+    /** Fail-safe so a dropped [ScannerEvent.Capture] can't wedge the shutter forever. */
+    private var captureWatchdog: Job? = null
 
     private val _events = MutableSharedFlow<ScannerEvent>(extraBufferCapacity = 8)
     val events: SharedFlow<ScannerEvent> = _events
@@ -121,10 +126,28 @@ class ScannerViewModel(
                 camera.copy(capturing = true)
             }
         }
-        if (fire) _events.tryEmit(ScannerEvent.Capture)
+        if (fire) {
+            armCaptureWatchdog()
+            _events.tryEmit(ScannerEvent.Capture)
+        }
+    }
+
+    /**
+     * Resets [CameraState.capturing] if no capture result lands within
+     * [CAPTURE_TIMEOUT_MS] — otherwise a dropped [ScannerEvent.Capture] (e.g. the
+     * screen wasn't STARTED when it was emitted) would leave the shutter dead.
+     */
+    private fun armCaptureWatchdog() {
+        captureWatchdog?.cancel()
+        captureWatchdog = viewModelScope.launch {
+            delay(CAPTURE_TIMEOUT_MS)
+            cameraState.update { if (it.capturing) it.copy(capturing = false) else it }
+        }
     }
 
     fun onCaptured(path: String) {
+        captureWatchdog?.cancel()
+        captureWatchdog = null
         viewModelScope.launch(Dispatchers.Default) {
             val mode = session.mode.value
             val page = buildPage(path, mode)
@@ -137,6 +160,8 @@ class ScannerViewModel(
     }
 
     fun onCaptureError() {
+        captureWatchdog?.cancel()
+        captureWatchdog = null
         cameraState.update { it.copy(capturing = false) }
     }
 
@@ -197,6 +222,7 @@ class ScannerViewModel(
 
     private companion object {
         const val CAPTURE_COOLDOWN_MS = 2_000L
+        const val CAPTURE_TIMEOUT_MS = 6_000L
         const val DETECT_DIMENSION = 1280
     }
 }
