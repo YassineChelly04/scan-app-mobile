@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.work.Configuration
 import com.scanni.app.di.AppGraph
 import com.scanni.app.vision.VisionRuntime
-import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 
 class ScanniApplication : Application(), Configuration.Provider {
 
@@ -12,8 +11,10 @@ class ScanniApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        // OpenCV is needed for live camera detection from the first frame, so load it
+        // at startup. PdfBox is only used during export and initializes itself lazily
+        // in SearchablePdfWriter, keeping it off the cold-start path.
         VisionRuntime.init()
-        PDFBoxResourceLoader.init(applicationContext)
     }
 
     override val workManagerConfiguration: Configuration

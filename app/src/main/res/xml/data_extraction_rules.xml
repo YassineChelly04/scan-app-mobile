@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ backup rules. The document database and image files are excluded
+  from cloud backup (which leaves the device); device-to-device transfer keeps
+  them so a phone upgrade still moves the user's library. App settings remain
+  eligible for both.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="scanni.db" />
+        <exclude domain="database" path="scanni.db-wal" />
+        <exclude domain="database" path="scanni.db-shm" />
+        <exclude domain="file" path="documents/" />
+    </cloud-backup>
+</data-extraction-rules>
