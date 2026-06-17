@@ -21,18 +21,19 @@ class CameraFrameAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     override fun analyze(image: ImageProxy) {
+        val rotated = image.imageInfo.rotationDegrees == 90 || image.imageInfo.rotationDegrees == 270
+        val orientedWidth = if (rotated) image.height else image.width
+        val orientedHeight = if (rotated) image.width else image.height
         try {
-            val rotated = image.imageInfo.rotationDegrees == 90 || image.imageInfo.rotationDegrees == 270
-            val orientedWidth = if (rotated) image.height else image.width
-            val orientedHeight = if (rotated) image.width else image.height
             if (!isEnabled() || !VisionRuntime.isAvailable) {
                 onResult(null, orientedWidth, orientedHeight)
                 return
             }
             val quad = detectIn(image)
             onResult(quad, orientedWidth, orientedHeight)
-        } catch (_: Throwable) {
-            onResult(null, 0, 0)
+        } catch (t: Throwable) {
+            android.util.Log.w(TAG, "detection failed", t)
+            onResult(null, orientedWidth, orientedHeight)
         } finally {
             image.close()
         }
@@ -62,5 +63,9 @@ class CameraFrameAnalyzer(
             oriented.release()
             wrapped.release()
         }
+    }
+
+    private companion object {
+        private const val TAG = "CameraFrameAnalyzer"
     }
 }
