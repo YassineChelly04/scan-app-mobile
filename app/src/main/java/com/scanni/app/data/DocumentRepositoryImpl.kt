@@ -1,5 +1,6 @@
 package com.scanni.app.data
 
+import androidx.room.withTransaction
 import com.scanni.app.core.geometry.Quad
 import com.scanni.app.core.text.FtsQuery
 import com.scanni.app.data.db.DocumentEntity
@@ -15,6 +16,7 @@ import com.scanni.app.domain.model.Page
 import com.scanni.app.domain.model.PageDraft
 import com.scanni.app.domain.model.ScanFilter
 import com.scanni.app.domain.model.SearchHit
+import com.scanni.app.domain.ocr.OcrScheduler
 import com.scanni.app.domain.repo.DocumentRepository
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.map
 class DocumentRepositoryImpl(
     private val database: ScanniDatabase,
     private val fileStore: PageFileStore,
+    private val ocrScheduler: OcrScheduler,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : DocumentRepository {
 
@@ -70,7 +73,7 @@ class DocumentRepositoryImpl(
             val extraRows = if (extraIds.isEmpty()) {
                 emptyList()
             } else {
-                extraIds.mapNotNull { documentDao.getById(it) }
+                documentDao.getManyByIds(extraIds.toList())
             }
             (titleRows + extraRows)
                 .distinctBy { it.id }
@@ -92,7 +95,7 @@ class DocumentRepositoryImpl(
         title: String,
         folderId: String?,
         pages: List<PageDraft>,
-    ) {
+    ) = database.withTransaction {
         val now = clock()
         documentDao.insert(
             DocumentEntity(
@@ -137,8 +140,14 @@ class DocumentRepositoryImpl(
 
     override suspend fun deleteDocuments(documentIds: List<String>) {
         if (documentIds.isEmpty()) return
-        ftsDao.deleteForDocuments(documentIds)
-        documentDao.delete(documentIds)
+        // Stop any in-flight recognition first so a worker can't write rows for, or
+        // read files of, a document we are about to remove.
+        documentIds.forEach { ocrScheduler.cancelDocument(it) }
+        database.withTransaction {
+            ftsDao.deleteForDocuments(documentIds)
+            documentDao.delete(documentIds)
+        }
+        // Page rows cascade-delete with the document; FTS rows are removed above.
         documentIds.forEach { fileStore.deleteDocumentFiles(it) }
     }
 
@@ -151,17 +160,19 @@ class DocumentRepositoryImpl(
         heightPx: Int,
     ) {
         val page = pageDao.getById(pageId) ?: return
-        pageDao.applyEdit(
-            id = pageId,
-            quadEncoded = quad?.encode(),
-            rotationDeg = rotationDeg,
-            filter = filter.name,
-            widthPx = widthPx,
-            heightPx = heightPx,
-            ocrStatus = OcrStatus.PENDING.name,
-        )
-        ftsDao.deleteForPage(pageId)
-        documentDao.touch(page.documentId, clock())
+        database.withTransaction {
+            pageDao.applyEdit(
+                id = pageId,
+                quadEncoded = quad?.encode(),
+                rotationDeg = rotationDeg,
+                filter = filter.name,
+                widthPx = widthPx,
+                heightPx = heightPx,
+                ocrStatus = OcrStatus.PENDING.name,
+            )
+            ftsDao.deleteForPage(pageId)
+            documentDao.touch(page.documentId, clock())
+        }
     }
 
     override suspend fun setPageOcr(
@@ -171,13 +182,15 @@ class DocumentRepositoryImpl(
         wordsJson: String?,
     ) {
         val page = pageDao.getById(pageId) ?: return
-        pageDao.setOcr(pageId, status.name, text, wordsJson)
-        if (status == OcrStatus.DONE) {
-            ftsDao.replaceForPage(pageId, page.documentId, text.orEmpty())
+        database.withTransaction {
+            pageDao.setOcr(pageId, status.name, text, wordsJson)
+            if (status == OcrStatus.DONE) {
+                ftsDao.replaceForPage(pageId, page.documentId, text.orEmpty())
+            }
         }
     }
 
-    override suspend fun resetOcr(documentId: String) {
+    override suspend fun resetOcr(documentId: String) = database.withTransaction {
         pageDao.resetOcrForDocument(documentId, OcrStatus.PENDING.name)
         ftsDao.deleteForDocuments(listOf(documentId))
     }

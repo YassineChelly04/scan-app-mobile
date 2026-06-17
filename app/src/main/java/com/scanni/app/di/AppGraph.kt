@@ -38,7 +38,7 @@ class AppGraph(private val appContext: Context) {
     val database: ScanniDatabase by lazy { ScanniDatabase.create(appContext) }
 
     val documentRepository: DocumentRepository by lazy {
-        DocumentRepositoryImpl(database, fileStore)
+        DocumentRepositoryImpl(database, fileStore, ocrScheduler)
     }
 
     val settingsRepository: SettingsRepository by lazy { SettingsRepositoryImpl(appContext) }

@@ -54,7 +54,15 @@ class SaveScanUseCase(
             processed.recycle()
             draft
         }
-        repository.createDocument(documentId, title, folderId, drafts)
+        try {
+            repository.createDocument(documentId, title, folderId, drafts)
+        } catch (t: Throwable) {
+            // The page files were written before the DB row above; if persistence
+            // fails there is no document referencing them, so clean them up rather
+            // than leaking orphaned images into files/documents/.
+            fileStore.deleteDocumentFiles(documentId)
+            throw t
+        }
         ocrScheduler.scheduleDocument(documentId)
         documentId
     }
