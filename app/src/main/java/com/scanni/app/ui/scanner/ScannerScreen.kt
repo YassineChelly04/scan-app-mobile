@@ -1,7 +1,11 @@
 package com.scanni.app.ui.scanner
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -81,6 +85,7 @@ import com.scanni.app.core.geometry.QuadStabilizer
 import com.scanni.app.di.AppGraph
 import com.scanni.app.domain.model.CapturedPage
 import com.scanni.app.domain.model.ScanMode
+import com.scanni.app.ui.common.EventEffect
 import com.scanni.app.ui.common.PageImage
 import com.scanni.app.ui.common.graphViewModel
 import com.scanni.app.vision.CameraFrameAnalyzer
@@ -109,9 +114,21 @@ fun ScannerScreen(
                 PackageManager.PERMISSION_GRANTED,
         )
     }
+    // Set once the system declines without offering a dialog (permanent / Android 11+
+    // auto-deny): from here a fresh request is a no-op, so we route to app settings.
+    var permanentlyDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted -> hasPermission = granted }
+    ) { granted ->
+        hasPermission = granted
+        if (!granted) {
+            val activity = context as? Activity
+            val canAsk = activity?.shouldShowRequestPermissionRationale(
+                Manifest.permission.CAMERA,
+            ) ?: false
+            permanentlyDenied = !canAsk
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
@@ -130,7 +147,21 @@ fun ScannerScreen(
                 onReview = onReview,
             )
         } else {
-            PermissionRationale(onGrant = { permissionLauncher.launch(Manifest.permission.CAMERA) })
+            PermissionRationale(
+                permanentlyDenied = permanentlyDenied,
+                onGrant = {
+                    if (permanentlyDenied) {
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null),
+                            ),
+                        )
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                },
+            )
         }
 
         // Top bar: close + torch.
@@ -205,27 +236,25 @@ private fun CameraContent(
     val flashAlpha = remember { Animatable(0f) }
     val importFailedMessage = stringResource(R.string.scanner_import_failed)
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                ScannerEvent.Capture -> controller.takePicture(
-                    context = context,
-                    target = graph.fileStore.newSessionFile(),
-                    onSaved = { file -> viewModel.onCaptured(file.absolutePath) },
-                    onError = { viewModel.onCaptureError() },
-                )
+    EventEffect(viewModel.events) { event ->
+        when (event) {
+            ScannerEvent.Capture -> controller.takePicture(
+                context = context,
+                target = graph.fileStore.newSessionFile(),
+                onSaved = { file -> viewModel.onCaptured(file.absolutePath) },
+                onError = { viewModel.onCaptureError() },
+            )
 
-                ScannerEvent.PageCaptured -> {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    launch {
-                        flashAlpha.snapTo(0.65f)
-                        flashAlpha.animateTo(0f, tween(420))
-                    }
+            ScannerEvent.PageCaptured -> {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                scope.launch {
+                    flashAlpha.snapTo(0.65f)
+                    flashAlpha.animateTo(0f, tween(420))
                 }
-
-                ScannerEvent.ImportFailed ->
-                    Toast.makeText(context, importFailedMessage, Toast.LENGTH_SHORT).show()
             }
+
+            ScannerEvent.ImportFailed ->
+                Toast.makeText(context, importFailedMessage, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -546,7 +575,10 @@ private fun ScannerIconButton(
 }
 
 @Composable
-private fun PermissionRationale(onGrant: () -> Unit) {
+private fun PermissionRationale(
+    permanentlyDenied: Boolean,
+    onGrant: () -> Unit,
+) {
     Column(
         Modifier
             .fillMaxSize()
@@ -567,6 +599,8 @@ private fun PermissionRationale(onGrant: () -> Unit) {
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
         Spacer(Modifier.size(20.dp))
+        // After a permanent denial the in-app request is a dead no-op, so this
+        // button instead deep-links into the OS app settings (handled by onGrant).
         Button(onClick = onGrant) {
             Text(stringResource(R.string.scanner_permission_grant))
         }

@@ -61,6 +61,7 @@ import com.scanni.app.di.AppGraph
 import com.scanni.app.domain.model.CapturedPage
 import com.scanni.app.domain.model.ScanFilter
 import com.scanni.app.ui.common.ConfirmDialog
+import com.scanni.app.ui.common.EventEffect
 import com.scanni.app.ui.common.FilterRow
 import com.scanni.app.ui.common.CropEditor
 import com.scanni.app.ui.common.PageImage
@@ -97,13 +98,11 @@ fun ReviewScreen(
 
     val saveFailedMessage = stringResource(R.string.document_export_failed)
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is ReviewEvent.Saved -> onSaved(event.documentId)
-                ReviewEvent.SaveFailed ->
-                    Toast.makeText(context, saveFailedMessage, Toast.LENGTH_SHORT).show()
-            }
+    EventEffect(viewModel.events) { event ->
+        when (event) {
+            is ReviewEvent.Saved -> onSaved(event.documentId)
+            ReviewEvent.SaveFailed ->
+                Toast.makeText(context, saveFailedMessage, Toast.LENGTH_SHORT).show()
         }
     }
 

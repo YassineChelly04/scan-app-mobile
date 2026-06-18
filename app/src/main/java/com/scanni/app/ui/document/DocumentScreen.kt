@@ -70,6 +70,7 @@ import com.scanni.app.domain.model.OcrStatus
 import com.scanni.app.domain.model.Page
 import com.scanni.app.export.ShareActions
 import com.scanni.app.ui.common.ConfirmDialog
+import com.scanni.app.ui.common.EventEffect
 import com.scanni.app.ui.common.TextInputDialog
 import com.scanni.app.ui.common.ZoomableImage
 import com.scanni.app.ui.common.graphViewModel
@@ -114,19 +115,17 @@ fun DocumentScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is DocumentEvent.SharePdf -> ShareActions.sharePdf(context, event.file)
-                is DocumentEvent.ShareImages -> ShareActions.shareImages(context, event.files)
-                is DocumentEvent.CopyText -> {
-                    ShareActions.copyToClipboard(context, clipboardLabel, event.text)
-                    Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
-                }
-                DocumentEvent.Deleted -> onBack()
-                DocumentEvent.ExportFailed ->
-                    Toast.makeText(context, exportFailedMessage, Toast.LENGTH_SHORT).show()
+    EventEffect(viewModel.events) { event ->
+        when (event) {
+            is DocumentEvent.SharePdf -> ShareActions.sharePdf(context, event.file)
+            is DocumentEvent.ShareImages -> ShareActions.shareImages(context, event.files)
+            is DocumentEvent.CopyText -> {
+                ShareActions.copyToClipboard(context, clipboardLabel, event.text)
+                Toast.makeText(context, copiedMessage, Toast.LENGTH_SHORT).show()
             }
+            DocumentEvent.Deleted -> onBack()
+            DocumentEvent.ExportFailed ->
+                Toast.makeText(context, exportFailedMessage, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -330,10 +329,13 @@ private fun PagesTab(
             pageSpacing = 16.dp,
         ) { index ->
             val page = pages[index]
+            val revision = remember(page.quad, page.rotationDeg, page.filter) {
+                pageRevision(page)
+            }
             Box(Modifier.fillMaxSize()) {
                 ZoomableImage(
                     path = page.processedPath,
-                    revision = pageRevision(page),
+                    revision = revision,
                     modifier = Modifier.fillMaxSize(),
                 )
                 SmallFloatingActionButton(

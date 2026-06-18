@@ -30,6 +30,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +84,11 @@ fun CropEditor(
         }
     }
 
-    var quad by remember(imagePath) { mutableStateOf(initialQuad) }
+    // rememberSaveable so an in-progress crop survives configuration changes
+    // (e.g. rotation). Keyed on imagePath so a new image resets to its initialQuad.
+    var quad by rememberSaveable(imagePath, stateSaver = QuadSaver) {
+        mutableStateOf(initialQuad)
+    }
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
     var activeHandle by remember { mutableStateOf(CropGeometry.HANDLE_NONE) }
     var touchPosition by remember { mutableStateOf(Offset.Zero) }
@@ -447,6 +453,15 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMagnifier(
         strokeWidth = 2.dp.toPx(),
     )
 }
+
+/**
+ * Persists the in-progress crop [Quad] across configuration changes by round-tripping
+ * through its compact string form (see [Quad.encode] / [Quad.decode]).
+ */
+private val QuadSaver: Saver<Quad, String> = Saver(
+    save = { it.encode() },
+    restore = { Quad.decode(it) ?: Quad.FULL },
+)
 
 private const val EDITOR_IMAGE_SIZE = 1600
 

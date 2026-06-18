@@ -55,10 +55,17 @@ class WorkManagerOcrScheduler(private val context: Context) : OcrScheduler {
         val request = OneTimeWorkRequestBuilder<OcrWorker>()
             .setInputData(workDataOf(OcrWorker.KEY_DOCUMENT_ID to documentId))
             .build()
+        // REPLACE (not APPEND_OR_REPLACE): the latest scan/edit supersedes an older,
+        // possibly-failed pass for this document instead of chaining behind it — a
+        // failed chain would cancel the appended work and skip recognition entirely.
         WorkManager.getInstance(context).enqueueUniqueWork(
             OcrWorker.uniqueName(documentId),
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            ExistingWorkPolicy.REPLACE,
             request,
         )
+    }
+
+    override fun cancelDocument(documentId: String) {
+        WorkManager.getInstance(context).cancelUniqueWork(OcrWorker.uniqueName(documentId))
     }
 }

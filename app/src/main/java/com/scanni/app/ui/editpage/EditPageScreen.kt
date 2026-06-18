@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.scanni.app.R
 import com.scanni.app.di.AppGraph
 import com.scanni.app.ui.common.CropEditor
+import com.scanni.app.ui.common.EventEffect
 import com.scanni.app.ui.common.FilterRow
 import com.scanni.app.ui.common.PageImage
 import com.scanni.app.ui.common.graphViewModel
@@ -57,9 +57,10 @@ fun EditPageScreen(
     }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            if (event == EditPageEvent.NotFound) onDone()
+    EventEffect(viewModel.events) { event ->
+        when (event) {
+            EditPageEvent.Saved -> onDone()
+            EditPageEvent.NotFound -> onDone()
         }
     }
 
@@ -83,7 +84,7 @@ fun EditPageScreen(
                     modifier = Modifier.weight(1f),
                 )
                 Button(
-                    onClick = { viewModel.save(onDone) },
+                    onClick = { viewModel.save() },
                     enabled = state.page != null && !state.saving,
                     modifier = Modifier.padding(end = 12.dp),
                 ) {

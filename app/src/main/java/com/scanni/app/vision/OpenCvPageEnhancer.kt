@@ -47,20 +47,23 @@ class OpenCvPageEnhancer : PageProcessor {
         source.recycle()
 
         var current = src
-        if (quad != null && quad != Quad.FULL) {
-            current = current.replacedBy { warp(it, quad) }
-        }
-        current = current.replacedBy { applyFilter(it, filter) }
-        when (((rotationDeg % 360) + 360) % 360) {
-            90 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_90_CLOCKWISE) } }
-            180 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_180) } }
-            270 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_90_COUNTERCLOCKWISE) } }
-        }
+        try {
+            if (quad != null && quad != Quad.FULL) {
+                current = current.replacedBy { warp(it, quad) }
+            }
+            current = current.replacedBy { applyFilter(it, filter) }
+            when (((rotationDeg % 360) + 360) % 360) {
+                90 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_90_CLOCKWISE) } }
+                180 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_180) } }
+                270 -> current = current.replacedBy { m -> Mat().also { Core.rotate(m, it, Core.ROTATE_90_COUNTERCLOCKWISE) } }
+            }
 
-        val output = Bitmap.createBitmap(current.cols(), current.rows(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(current, output)
-        current.release()
-        output
+            val output = Bitmap.createBitmap(current.cols(), current.rows(), Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(current, output)
+            output
+        } finally {
+            current.release()
+        }
     }
 
     /** Applies [transform] and releases the receiver when a new Mat was produced. */
@@ -184,9 +187,12 @@ class OpenCvPageEnhancer : PageProcessor {
         flattened.release()
         val channels = ArrayList<Mat>(3)
         Core.split(hsv, channels)
-        channels[1].convertTo(channels[1], -1, 1.45, 0.0)
-        Core.merge(channels, hsv)
-        channels.forEach { it.release() }
+        try {
+            channels[1].convertTo(channels[1], -1, 1.45, 0.0)
+            Core.merge(channels, hsv)
+        } finally {
+            channels.forEach { it.release() }
+        }
         val boosted = Mat()
         Imgproc.cvtColor(hsv, boosted, Imgproc.COLOR_HSV2RGB)
         hsv.release()
@@ -220,18 +226,21 @@ class OpenCvPageEnhancer : PageProcessor {
         val channels = ArrayList<Mat>(3)
         Core.split(rgb, channels)
         val result = ArrayList<Mat>(3)
-        for (channel in channels) {
-            val background = estimateBackground(channel)
-            val divided = Mat()
-            Core.divide(channel, background, divided, strength)
-            background.release()
-            channel.release()
-            result.add(divided)
+        try {
+            for (channel in channels) {
+                val background = estimateBackground(channel)
+                val divided = Mat()
+                Core.divide(channel, background, divided, strength)
+                background.release()
+                result.add(divided)
+            }
+            val merged = Mat()
+            Core.merge(result, merged)
+            return merged
+        } finally {
+            channels.forEach { it.release() }
+            result.forEach { it.release() }
         }
-        val merged = Mat()
-        Core.merge(result, merged)
-        result.forEach { it.release() }
-        return merged
     }
 
     private fun estimateBackground(channel: Mat): Mat {

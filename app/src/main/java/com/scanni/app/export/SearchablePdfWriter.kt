@@ -4,6 +4,7 @@ import android.content.Context
 import com.scanni.app.core.export.PdfLayout
 import com.scanni.app.domain.model.OcrWords
 import com.scanni.app.domain.model.Page
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
@@ -30,6 +31,9 @@ import kotlinx.coroutines.withContext
 class SearchablePdfWriter(private val context: Context) {
 
     suspend fun write(outFile: File, pages: List<Page>) = withContext(Dispatchers.IO) {
+        // Initialize PdfBox's asset loader lazily on first export rather than at app
+        // startup. Idempotent, so calling it per export is safe.
+        PDFBoxResourceLoader.init(context)
         val document = PDDocument()
         var arabicFont: PDFont? = null
 

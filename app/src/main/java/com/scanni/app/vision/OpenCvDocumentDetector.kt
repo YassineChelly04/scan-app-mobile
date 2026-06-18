@@ -38,26 +38,27 @@ class OpenCvDocumentDetector {
 
         val scale = WORK_SIZE.toFloat() / max(gray.cols(), gray.rows())
         val work = Mat()
-        if (scale < 1f) {
-            Imgproc.resize(
-                gray,
-                work,
-                Size(gray.cols() * scale.toDouble(), gray.rows() * scale.toDouble()),
-                0.0,
-                0.0,
-                Imgproc.INTER_AREA,
-            )
-        } else {
-            gray.copyTo(work)
-        }
-
         val blurred = Mat()
-        Imgproc.GaussianBlur(work, blurred, Size(5.0, 5.0), 0.0)
-
-        val frameArea = (work.cols() * work.rows()).toFloat()
-        var best: ScoredQuad? = null
         val binary = Mat()
         try {
+            if (scale < 1f) {
+                Imgproc.resize(
+                    gray,
+                    work,
+                    Size(gray.cols() * scale.toDouble(), gray.rows() * scale.toDouble()),
+                    0.0,
+                    0.0,
+                    Imgproc.INTER_AREA,
+                )
+            } else {
+                gray.copyTo(work)
+            }
+
+            Imgproc.GaussianBlur(work, blurred, Size(5.0, 5.0), 0.0)
+
+            val frameArea = (work.cols() * work.rows()).toFloat()
+            var best: ScoredQuad? = null
+
             // Strategy 1: Canny edges, dilated so broken outlines connect.
             Imgproc.Canny(blurred, binary, 50.0, 150.0)
             val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0))
@@ -76,19 +77,19 @@ class OpenCvDocumentDetector {
                 ADAPTIVE_C,
             )
             best = bestQuad(binary, frameArea, minAreaFraction, best)
+
+            val result = best?.let { scored ->
+                val w = work.cols().toFloat()
+                val h = work.rows().toFloat()
+                Quad.fromUnordered(scored.points.map { Vec2(it.x.toFloat() / w, it.y.toFloat() / h) })
+                    .clamped()
+            }
+            return result?.takeIf { it.isConvex() }
         } finally {
             binary.release()
             blurred.release()
+            work.release()
         }
-
-        val result = best?.let { scored ->
-            val w = work.cols().toFloat()
-            val h = work.rows().toFloat()
-            Quad.fromUnordered(scored.points.map { Vec2(it.x.toFloat() / w, it.y.toFloat() / h) })
-                .clamped()
-        }
-        work.release()
-        return result?.takeIf { it.isConvex() }
     }
 
     /**
@@ -150,29 +151,39 @@ class OpenCvDocumentDetector {
         for (contour in candidates) {
             if (Imgproc.contourArea(contour) < frameArea * minAreaFraction) break
             val contour2f = MatOfPoint2f(*contour.toArray())
-            val peri = Imgproc.arcLength(contour2f, true)
-            for (epsilon in EPSILON_LADDER) {
-                val approx2f = MatOfPoint2f()
-                Imgproc.approxPolyDP(contour2f, approx2f, epsilon * peri, true)
-                val points = approx2f.toArray().toList()
-                approx2f.release()
-                if (points.size != 4) continue
+            try {
+                val peri = Imgproc.arcLength(contour2f, true)
+                for (epsilon in EPSILON_LADDER) {
+                    val approx2f = MatOfPoint2f()
+                    val points = try {
+                        Imgproc.approxPolyDP(contour2f, approx2f, epsilon * peri, true)
+                        approx2f.toArray().toList()
+                    } finally {
+                        approx2f.release()
+                    }
+                    if (points.size != 4) continue
 
-                val quadContour = MatOfPoint(*points.toTypedArray())
-                val convex = Imgproc.isContourConvex(quadContour)
-                val area = Imgproc.contourArea(quadContour).toFloat()
-                quadContour.release()
-                if (!convex || area < frameArea * minAreaFraction) continue
+                    val quadContour = MatOfPoint(*points.toTypedArray())
+                    val (convex, area) = try {
+                        val c = Imgproc.isContourConvex(quadContour)
+                        val a = Imgproc.contourArea(quadContour).toFloat()
+                        c to a
+                    } finally {
+                        quadContour.release()
+                    }
+                    if (!convex || area < frameArea * minAreaFraction) continue
 
-                val squareness = squareness(points)
-                if (squareness <= 0f) continue
-                val score = (area / frameArea) * squareness
-                if (best == null || score > best.score) {
-                    best = ScoredQuad(points, score)
+                    val squareness = squareness(points)
+                    if (squareness <= 0f) continue
+                    val score = (area / frameArea) * squareness
+                    if (best == null || score > best.score) {
+                        best = ScoredQuad(points, score)
+                    }
+                    break
                 }
-                break
+            } finally {
+                contour2f.release()
             }
-            contour2f.release()
         }
         contours.forEach { it.release() }
         return best

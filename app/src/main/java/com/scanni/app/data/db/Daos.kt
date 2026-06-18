@@ -56,6 +56,9 @@ interface DocumentDao {
     @Query("$DOCUMENT_ROW_SELECT WHERE d.id IN (:ids)")
     fun observeByIds(ids: List<String>): Flow<List<DocumentRow>>
 
+    @Query("$DOCUMENT_ROW_SELECT WHERE d.id IN (:ids)")
+    suspend fun getManyByIds(ids: List<String>): List<DocumentRow>
+
     @Query(
         "$DOCUMENT_ROW_SELECT WHERE d.title LIKE :pattern ESCAPE '\\' ORDER BY d.updatedAt DESC",
     )

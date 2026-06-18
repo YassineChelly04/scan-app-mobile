@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scanned documents and recognized text can be sensitive (IDs, financial papers),
+  so the document database and image files are excluded from Auto Backup and from
+  `adb backup`. App settings (DataStore preferences) are still backed up.
+  Applies to Android 11 and below; Android 12+ uses data_extraction_rules.xml.
+-->
+<full-backup-content>
+    <exclude domain="database" path="scanni.db" />
+    <exclude domain="database" path="scanni.db-wal" />
+    <exclude domain="database" path="scanni.db-shm" />
+    <exclude domain="file" path="documents/" />
+</full-backup-content>

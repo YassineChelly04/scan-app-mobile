@@ -54,6 +54,7 @@ class EditPageViewModel(
     val events: SharedFlow<EditPageEvent> = _events
 
     private var previewJob: Job? = null
+    private var chipJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -95,24 +96,32 @@ class EditPageViewModel(
         _uiState.value.page?.let { renderFilterChips(it) }
     }
 
-    fun save(onDone: () -> Unit) {
+    fun save() {
         val state = _uiState.value
         if (state.saving || state.page == null) return
         _uiState.update { it.copy(saving = true) }
         viewModelScope.launch {
             runCatching {
                 updatePage(pageId, state.quad, state.rotationDeg, state.filter)
+                fileStore.clearPreviews()
+            }.onSuccess {
+                _events.tryEmit(EditPageEvent.Saved)
+            }.onFailure {
+                _uiState.update { it.copy(saving = false) }
             }
-            fileStore.clearPreviews()
-            _events.tryEmit(EditPageEvent.Saved)
-            onDone()
         }
     }
 
     private fun renderPreview() {
         val state = _uiState.value
         val page = state.page ?: return
-        val key = "${state.quad?.encode()}|${state.rotationDeg}|${state.filter}".hashCode().toString()
+        // Snapshot the edit inputs once so the cache key and the render use the
+        // exact same values — re-reading _uiState inside the coroutine could pick
+        // up a newer edit and produce a preview that doesn't match its key.
+        val quad = state.quad
+        val rotationDeg = state.rotationDeg
+        val filter = state.filter
+        val key = "${quad?.encode()}|$rotationDeg|$filter".hashCode().toString()
         if (state.previewKey == key && state.previewPath != null) return
         previewJob?.cancel()
         _uiState.update { it.copy(processing = true, previewKey = key) }
@@ -120,9 +129,9 @@ class EditPageViewModel(
             val path = runCatching {
                 val bitmap = processor.render(
                     originalPath = page.originalPath,
-                    quad = _uiState.value.quad,
-                    rotationDeg = _uiState.value.rotationDeg,
-                    filter = _uiState.value.filter,
+                    quad = quad,
+                    rotationDeg = rotationDeg,
+                    filter = filter,
                     maxDimension = PageProcessor.PREVIEW_SIZE,
                 )
                 val file = fileStore.previewFile("edit_${pageId}_$key")
@@ -135,8 +144,11 @@ class EditPageViewModel(
     }
 
     private fun renderFilterChips(page: Page) {
-        viewModelScope.launch(Dispatchers.Default) {
-            val quad = _uiState.value.quad
+        // Cancel any in-flight chip render so a crop change doesn't keep producing
+        // chips for the previous quad (mirrors how previewJob is superseded).
+        chipJob?.cancel()
+        val quad = _uiState.value.quad
+        chipJob = viewModelScope.launch(Dispatchers.Default) {
             val cropKey = quad?.encode().hashCode().toString()
             for (filter in ScanFilter.entries) {
                 val path = runCatching {

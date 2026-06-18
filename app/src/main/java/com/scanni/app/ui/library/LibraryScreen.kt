@@ -472,8 +472,11 @@ private fun DocumentGrid(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(3.dp))
+                    val timestamp = remember(document.createdAt) {
+                        formatTimestamp(document.createdAt, dateFormatter)
+                    }
                     Text(
-                        text = formatTimestamp(document.createdAt, dateFormatter) + " · " +
+                        text = timestamp + " · " +
                             pluralStringResource(
                                 R.plurals.library_page_count,
                                 document.pageCount,
