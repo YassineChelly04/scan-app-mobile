@@ -15,103 +15,103 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.scanni.app.domain.model.ThemeMode
 
-// Scanni brand palette — a confident scanner blue with a soft paper-tinted surface.
-private val Primary = Color(0xFF2750EC)
-private val OnPrimary = Color(0xFFFFFFFF)
-private val PrimaryContainer = Color(0xFFDCE1FF)
-private val OnPrimaryContainer = Color(0xFF00164F)
-private val Secondary = Color(0xFF595E72)
-private val OnSecondary = Color(0xFFFFFFFF)
-private val SecondaryContainer = Color(0xFFDEE1F9)
-private val OnSecondaryContainer = Color(0xFF161B2C)
-private val Tertiary = Color(0xFF00687A)
-private val OnTertiary = Color(0xFFFFFFFF)
-private val TertiaryContainer = Color(0xFFABEDFF)
-private val OnTertiaryContainer = Color(0xFF001F26)
+// Scanni v1.4 "warm paper" palette — a calm paper-white surface, one confident
+// blue and ink-dark text (see the redesign Foundations):
+//   Blue #2B63E0 · Tint #EAF0FE · Paper #F6F4F0 · Ink #191B1E · Camera #0E0F12
+private val Blue = Color(0xFF2B63E0)
+private val BlueTint = Color(0xFFEAF0FE)
+private val Paper = Color(0xFFF6F4F0)
+private val Ink = Color(0xFF191B1E)
+private val Muted = Color(0xFF9AA0A6)
+private val Hairline = Color(0xFFECEAE4)        // subtle card / field borders
+private val HairlineStrong = Color(0xFFC9C6BE)  // dashed "add" affordances
 
 private val LightColors = lightColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-    primaryContainer = PrimaryContainer,
-    onPrimaryContainer = OnPrimaryContainer,
-    secondary = Secondary,
-    onSecondary = OnSecondary,
-    secondaryContainer = SecondaryContainer,
-    onSecondaryContainer = OnSecondaryContainer,
-    tertiary = Tertiary,
-    onTertiary = OnTertiary,
-    tertiaryContainer = TertiaryContainer,
-    onTertiaryContainer = OnTertiaryContainer,
-    background = Color(0xFFFBF8FF),
-    onBackground = Color(0xFF1A1B22),
-    surface = Color(0xFFFBF8FF),
-    onSurface = Color(0xFF1A1B22),
-    surfaceVariant = Color(0xFFE2E1EC),
-    onSurfaceVariant = Color(0xFF45464F),
-    // Tonal surface containers give cards, sheets and the search bar layered depth.
-    surfaceDim = Color(0xFFDAD9E0),
-    surfaceBright = Color(0xFFFBF8FF),
+    primary = Blue,
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = BlueTint,
+    onPrimaryContainer = Color(0xFF14306B),
+    secondary = Color(0xFF41454B),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = BlueTint,
+    onSecondaryContainer = Color(0xFF14306B),
+    tertiary = Color(0xFF2B63E0),
+    onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFDCE7FD),
+    onTertiaryContainer = Color(0xFF0E2A66),
+    background = Paper,
+    onBackground = Ink,
+    surface = Paper,
+    onSurface = Ink,
+    surfaceVariant = Color(0xFFEFEDE7),
+    onSurfaceVariant = Muted,
+    // Cards/sheets sit as flat white on paper; depth comes from hairlines + shadow,
+    // not tonal fills — so the container roles stay near-white and warm.
+    surfaceDim = Color(0xFFE7E4DE),
+    surfaceBright = Color(0xFFFCFBF9),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF4F2FB),
-    surfaceContainer = Color(0xFFEEEDF5),
-    surfaceContainerHigh = Color(0xFFE9E7F0),
-    surfaceContainerHighest = Color(0xFFE3E1EA),
-    surfaceTint = Primary,
-    outline = Color(0xFF767680),
-    outlineVariant = Color(0xFFC6C5D0),
+    surfaceContainerLow = Color(0xFFFCFBF9),
+    surfaceContainer = Color(0xFFFFFFFF),
+    surfaceContainerHigh = Color(0xFFFFFFFF),
+    surfaceContainerHighest = Color(0xFFF1EFEA),
+    surfaceTint = Blue,
+    outline = HairlineStrong,
+    outlineVariant = Hairline,
     error = Color(0xFFBA1A1A),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
     inverseSurface = Color(0xFF2F3036),
-    inverseOnSurface = Color(0xFFF2F0F7),
-    inversePrimary = Color(0xFFB7C4FF),
+    inverseOnSurface = Color(0xFFF3F1EC),
+    inversePrimary = Color(0xFFB1C5FF),
 )
 
+// Warm-neutral dark counterpart (the redesign is paper-first; this keeps the same
+// blue accent on a soft near-black rather than a blue-tinted dark).
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFB7C4FF),
-    onPrimary = Color(0xFF00277E),
-    primaryContainer = Color(0xFF003BB0),
-    onPrimaryContainer = Color(0xFFDCE1FF),
-    secondary = Color(0xFFC2C5DD),
-    onSecondary = Color(0xFF2B3042),
-    secondaryContainer = Color(0xFF424659),
-    onSecondaryContainer = Color(0xFFDEE1F9),
-    tertiary = Color(0xFF55D6F4),
-    onTertiary = Color(0xFF003640),
-    tertiaryContainer = Color(0xFF004E5C),
-    onTertiaryContainer = Color(0xFFABEDFF),
-    background = Color(0xFF121318),
-    onBackground = Color(0xFFE3E1E9),
-    surface = Color(0xFF121318),
-    onSurface = Color(0xFFE3E1E9),
-    surfaceVariant = Color(0xFF45464F),
-    onSurfaceVariant = Color(0xFFC6C5D0),
-    // Tonal surface containers give cards, sheets and the search bar layered depth.
-    surfaceDim = Color(0xFF121318),
-    surfaceBright = Color(0xFF38393F),
-    surfaceContainerLowest = Color(0xFF0C0E13),
-    surfaceContainerLow = Color(0xFF1A1B21),
-    surfaceContainer = Color(0xFF1E1F25),
-    surfaceContainerHigh = Color(0xFF282A30),
-    surfaceContainerHighest = Color(0xFF33353B),
-    surfaceTint = Color(0xFFB7C4FF),
-    outline = Color(0xFF90909A),
-    outlineVariant = Color(0xFF45464F),
+    primary = Color(0xFFAFC6FF),
+    onPrimary = Color(0xFF06245F),
+    primaryContainer = Color(0xFF1F3C7A),
+    onPrimaryContainer = Color(0xFFDCE6FF),
+    secondary = Color(0xFFC6C4BD),
+    onSecondary = Color(0xFF2E302E),
+    secondaryContainer = Color(0xFF1F3C7A),
+    onSecondaryContainer = Color(0xFFDCE6FF),
+    tertiary = Color(0xFF8FB4FF),
+    onTertiary = Color(0xFF06245F),
+    tertiaryContainer = Color(0xFF274A8C),
+    onTertiaryContainer = Color(0xFFDCE7FD),
+    background = Color(0xFF15161A),
+    onBackground = Color(0xFFECEAE4),
+    surface = Color(0xFF15161A),
+    onSurface = Color(0xFFECEAE4),
+    surfaceVariant = Color(0xFF3C3E42),
+    onSurfaceVariant = Color(0xFFB6B3AC),
+    surfaceDim = Color(0xFF15161A),
+    surfaceBright = Color(0xFF393B40),
+    surfaceContainerLowest = Color(0xFF0E0F12),
+    surfaceContainerLow = Color(0xFF1B1C20),
+    surfaceContainer = Color(0xFF1F2024),
+    surfaceContainerHigh = Color(0xFF292B2F),
+    surfaceContainerHighest = Color(0xFF34363B),
+    surfaceTint = Color(0xFFAFC6FF),
+    outline = Color(0xFF8E8C85),
+    outlineVariant = Color(0xFF44464A),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
-    inverseSurface = Color(0xFFE3E1E9),
+    inverseSurface = Color(0xFFECEAE4),
     inverseOnSurface = Color(0xFF2F3036),
-    inversePrimary = Primary,
+    inversePrimary = Blue,
 )
 
+// Rounded, friendly shapes — soft cards and pill controls per the redesign.
 val ScanniShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
     medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(20.dp),
     extraLarge = RoundedCornerShape(28.dp),
 )
 

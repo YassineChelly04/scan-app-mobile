@@ -14,8 +14,8 @@ android {
         applicationId = "com.scanni.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.3.1"
+        versionCode = 7
+        versionName = "1.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -66,6 +66,13 @@ android {
     // OCR models and fonts must not be re-compressed by AAPT.
     androidResources {
         noCompress += "traineddata"
+    }
+
+    testOptions {
+        unitTests {
+            // Robolectric needs the merged manifest/resources for repository tests.
+            isIncludeAndroidResources = true
+        }
     }
 
     // Per-ABI APK splits so each phone downloads only its own native libraries
@@ -126,6 +133,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
