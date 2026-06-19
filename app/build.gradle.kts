@@ -68,6 +68,13 @@ android {
         noCompress += "traineddata"
     }
 
+    testOptions {
+        unitTests {
+            // Robolectric needs the merged manifest/resources for repository tests.
+            isIncludeAndroidResources = true
+        }
+    }
+
     // Per-ABI APK splits so each phone downloads only its own native libraries
     // (OpenCV + Tesseract bundle a .so set for every ABI — the bulk of the size).
     // A universal APK is still built as a fallback for unknown architectures.
@@ -126,6 +133,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
