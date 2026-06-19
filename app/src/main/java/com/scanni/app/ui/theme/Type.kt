@@ -8,8 +8,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.scanni.app.R
 
-// IBM Plex Sans Arabic — a modern, professional family bundled for full offline
-// use that covers Latin *and* Arabic, so the UI looks the same in both languages.
+// v1.4 type — the redesign calls for Plus Jakarta Sans (Display 800/-0.5, Title
+// 700, Body 500, Overline 700 caps). Until the Plus Jakarta Sans .ttf weights are
+// bundled in res/font, we keep IBM Plex Sans Arabic (which also covers Arabic) and
+// drive the new *scale*; swapping the typeface is then a one-line change here.
+//
+// TODO(v1.4): add plus_jakarta_sans_{medium,semibold,bold,extrabold}.ttf and point
+// ScanniFontFamily at them (weights 500/600/700/800). Keep an Arabic family for
+// Arabic content since Plus Jakarta Sans has no Arabic glyphs.
 val ScanniFontFamily = FontFamily(
     Font(R.font.ibm_plex_sans_arabic_regular, FontWeight.Normal),
     Font(R.font.ibm_plex_sans_arabic_medium, FontWeight.Medium),
@@ -17,89 +23,40 @@ val ScanniFontFamily = FontFamily(
     Font(R.font.ibm_plex_sans_arabic_bold, FontWeight.Bold),
 )
 
+private fun scanni(
+    weight: FontWeight,
+    size: Int,
+    lineHeight: Int = (size * 1.3).toInt(),
+    letterSpacing: Double = 0.0,
+) = TextStyle(
+    fontFamily = ScanniFontFamily,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = lineHeight.sp,
+    letterSpacing = letterSpacing.sp,
+)
+
+// Weight aliases matching the redesign. ExtraBold (800) degrades to Bold on the
+// interim IBM Plex family and renders true once Plus Jakarta Sans is bundled.
+private val Display = FontWeight.W800
+private val Strong = FontWeight.W700
+private val Medium = FontWeight.W500
+
 val ScanniTypography = Typography(
-    headlineLarge = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp,
-        letterSpacing = (-0.4).sp,
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = (-0.3).sp,
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp,
-        letterSpacing = (-0.2).sp,
-    ),
-    titleLarge = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = (-0.2).sp,
-    ),
-    titleMedium = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    titleSmall = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.3.sp,
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.2.sp,
-    ),
-    bodySmall = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.3.sp,
-    ),
-    labelLarge = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp,
-    ),
-    labelMedium = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp,
-    ),
-    labelSmall = TextStyle(
-        fontFamily = ScanniFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp,
-    ),
+    // Hero / screen titles — "Scanni", "Settings", "Your documents".
+    headlineLarge = scanni(Display, 30, 36, -0.5),
+    headlineMedium = scanni(Display, 25, 30, -0.5),
+    headlineSmall = scanni(Display, 21, 27, -0.4),
+    // Bar titles and prominent card titles.
+    titleLarge = scanni(Strong, 20, 26, -0.2),
+    titleMedium = scanni(Strong, 17, 22, -0.1),
+    titleSmall = scanni(Strong, 15, 19),
+    // Body & control labels sit at Medium per the redesign.
+    bodyLarge = scanni(Medium, 15, 21),
+    bodyMedium = scanni(Medium, 14, 20),
+    bodySmall = scanni(Medium, 12, 16),
+    // Chip/button labels (700) and the uppercase section overline (700 · +0.9).
+    labelLarge = scanni(Strong, 14, 18),
+    labelMedium = scanni(FontWeight.W600, 13, 16, 0.2),
+    labelSmall = scanni(Strong, 12, 16, 0.9),
 )
